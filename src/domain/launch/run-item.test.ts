@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createFakeSystem } from "@/domain/launch/fake-system";
 import type { ItemRunEvent } from "@/domain/launch/item-run";
-import { runItem, runItems } from "@/domain/launch/run-items";
+import { runItem } from "@/domain/launch/run-item";
 import { demoPresets } from "@/domain/preset/fixtures";
 import type { PresetItem } from "@/domain/preset/schema";
 
@@ -57,38 +57,5 @@ describe("runItem", () => {
       { type: "output", line: { stream: "stderr", text: "port 3000 already in use" } },
       { type: "exited", code: 1 },
     ]);
-  });
-});
-
-describe("runItems", () => {
-  it("lance les items dans l'ordre et continue après un échec", async () => {
-    const fake = createFakeSystem({
-      launchApplication: () => Promise.reject(new Error("Program not found: code")),
-    });
-    const failed: string[] = [];
-    await runItems(
-      devSaas,
-      fake.system,
-      (itemId, event) => {
-        if (event.type === "failed") failed.push(itemId);
-      },
-      () => true,
-    );
-
-    expect(failed).toEqual([item(0).id, item(1).id]);
-    expect(fake.calls).toEqual([
-      "command npm run dev in ~/Projects/my-saas",
-      "url http://localhost:3000",
-      "url https://supabase.com/dashboard",
-      "url https://vercel.com/dashboard",
-      "url https://ui.shadcn.com",
-    ]);
-  });
-
-  it("ignore les items écartés par shouldRun", async () => {
-    const fake = createFakeSystem();
-    await runItems(devSaas, fake.system, () => {}, (presetItem) => presetItem.type === "url");
-    expect(fake.calls.every((call) => call.startsWith("url "))).toBe(true);
-    expect(fake.calls).toHaveLength(4);
   });
 });

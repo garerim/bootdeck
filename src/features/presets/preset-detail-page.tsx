@@ -60,6 +60,10 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
     .map((item) => run?.items[item.id])
     .filter((itemRun): itemRun is ItemRun => itemRun !== undefined);
   const hasRunningItems = itemRuns.some((itemRun) => itemRun.status === "running");
+  const durationMs =
+    run?.finishedAt === undefined
+      ? undefined
+      : new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime();
 
   function handleDuplicate() {
     const copy = duplicatePreset(presetId);
@@ -131,7 +135,7 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
           {run ? (
             <div className="flex items-baseline gap-2 text-xs">
               <p role="status" aria-live="polite" className="font-medium">
-                {describeRunSummary(summarizeItemRuns(itemRuns), launching)}
+                {describeRunSummary(summarizeItemRuns(itemRuns), launching, durationMs)}
                 <span className="font-normal text-muted-foreground">
                   {" "}
                   · started {timeFormat.format(new Date(run.startedAt))}

@@ -19,6 +19,12 @@ describe("describeRunSummary", () => {
     expect(describeRunSummary(summary({ success: 6, running: 1 }), false)).toBe("7/7 launched · 1 running");
   });
 
+  it("indique la durée de la séquence quand elle est connue", () => {
+    expect(describeRunSummary(summary({ success: 3 }), false, 1234)).toBe("3/3 launched in 1.2 s");
+    expect(describeRunSummary(summary({ success: 2 }), false, 42)).toBe("2/2 launched in 42 ms");
+    expect(describeRunSummary(summary({ success: 2 }), false, 0)).toBe("2/2 launched in 1 ms");
+  });
+
   it("signale les échecs et les items ignorés", () => {
     expect(describeRunSummary(summary({ success: 5, failed: 1, skipped: 1 }), false)).toBe(
       "5/6 launched · 1 failed · 1 skipped",

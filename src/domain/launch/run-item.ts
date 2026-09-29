@@ -52,20 +52,3 @@ function toItemRunEvent(event: ProcessEvent): ItemRunEvent {
     ? { type: "exited", code: event.code }
     : { type: "output", line: { stream: event.type, text: event.line } };
 }
-
-/**
- * Lance les items dans l'ordre, un par un. L'échec d'un item n'arrête pas les
- * suivants. Les items désactivés ou déjà en cours (commande toujours active
- * d'un lancement précédent) sont ignorés.
- */
-export async function runItems(
-  items: readonly PresetItem[],
-  system: SystemAdapter,
-  emit: (itemId: string, event: ItemRunEvent) => void,
-  shouldRun: (item: PresetItem) => boolean,
-): Promise<void> {
-  for (const item of items) {
-    if (!shouldRun(item)) continue;
-    await runItem(item, system, (event) => emit(item.id, event));
-  }
-}
