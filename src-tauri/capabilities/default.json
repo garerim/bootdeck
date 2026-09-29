@@ -7,6 +7,11 @@
     "core:default",
     "allow-load-presets",
     "allow-save-presets",
-    "allow-backup-presets-file"
+    "allow-backup-presets-file",
+    "allow-open-url",
+    "allow-open-folder",
+    "allow-launch-application",
+    "allow-execute-command",
+    "allow-stop-process"
   ]
 }

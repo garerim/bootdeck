@@ -22,6 +22,26 @@ pub enum AppError {
     /// Donnée reçue du front refusée par Rust (on ne fait jamais confiance à l'IPC).
     #[error("Invalid input: {0}")]
     InvalidInput(String),
+
+    /// Dossier, programme ou dossier de travail introuvable sur cette machine.
+    #[error("{what} not found: {target}")]
+    NotFound { what: &'static str, target: String },
+
+    /// Le système a refusé d'ouvrir une URL ou un dossier.
+    #[error("Could not open {target}: {source}")]
+    Open {
+        target: String,
+        #[source]
+        source: std::io::Error,
+    },
+
+    /// Échec de l'arrêt d'un processus lancé par l'application.
+    #[error("Could not stop process {pid}: {source}")]
+    Stop {
+        pid: u32,
+        #[source]
+        source: std::io::Error,
+    },
 }
 
 impl AppError {
@@ -33,10 +53,20 @@ impl AppError {
         }
     }
 
+    pub fn not_found(what: &'static str, target: impl std::fmt::Display) -> Self {
+        Self::NotFound {
+            what,
+            target: target.to_string(),
+        }
+    }
+
     fn kind(&self) -> &'static str {
         match self {
             Self::Io { .. } => "io",
             Self::InvalidInput(_) => "invalid-input",
+            Self::NotFound { .. } => "not-found",
+            Self::Open { .. } => "open-failed",
+            Self::Stop { .. } => "stop-failed",
         }
     }
 }

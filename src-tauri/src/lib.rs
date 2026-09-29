@@ -9,13 +9,15 @@ mod models;
 mod services;
 mod system;
 
-use tauri::Manager;
+use tauri::{Manager, RunEvent};
 
+use services::processes::ProcessRegistry;
 use services::storage::{PresetFileStore, PRESETS_FILE_NAME};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(ProcessRegistry::default())
         .setup(|app| {
             // Dossier de données propre à l'app (Windows : %APPDATA%\dev.workspacepresets.desktop).
             let data_directory = app.path().app_data_dir()?;
@@ -26,8 +28,20 @@ pub fn run() {
             commands::storage::load_presets,
             commands::storage::save_presets,
             commands::storage::backup_presets_file,
+            commands::launcher::open_url,
+            commands::launcher::open_folder,
+            commands::launcher::launch_application,
+            commands::processes::execute_command,
+            commands::processes::stop_process,
         ])
-        .run(tauri::generate_context!())
+        .build(tauri::generate_context!())
         // Échec au démarrage (config invalide, WebView absente) : rien à récupérer, on s'arrête.
-        .expect("error while running tauri application");
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // Les commandes lancées par l'app (ex. `npm run dev`) s'arrêtent avec elle :
+            // sinon elles tourneraient en arrière-plan, invisibles, en occupant leurs ports.
+            if let RunEvent::Exit = event {
+                app.state::<ProcessRegistry>().stop_all();
+            }
+        });
 }

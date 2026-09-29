@@ -6,6 +6,11 @@ fn main() {
         "load_presets",
         "save_presets",
         "backup_presets_file",
+        "open_url",
+        "open_folder",
+        "launch_application",
+        "execute_command",
+        "stop_process",
     ]);
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(manifest))
         .expect("failed to run tauri-build");
