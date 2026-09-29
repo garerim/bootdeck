@@ -1,14 +1,10 @@
 import { applyItemRunEvent, createItemRun, type ItemRun, type ItemRunEvent } from "@/domain/launch/item-run";
-import {
-  buildLaunchReport,
-  planLaunch,
-  type ItemResolver,
-  type LaunchReport,
-} from "@/domain/launch/pipeline";
+import { buildLaunchReport, planLaunch, type LaunchReport } from "@/domain/launch/pipeline";
 import { runItem } from "@/domain/launch/run-item";
 import type { SystemAdapter } from "@/domain/launch/system-adapter";
 import { SYSTEM_CALL_TIMEOUT_MS, withTimeouts } from "@/domain/launch/timeout";
 import type { Preset } from "@/domain/preset/schema";
+import { createVariableResolver } from "@/domain/variables/variables";
 import { errorMessage } from "@/lib/errors";
 
 /**
@@ -25,12 +21,15 @@ export interface LaunchRun {
   finishedAt?: string;
   inProgress: boolean;
   items: Record<string, ItemRun>;
+  /** Valeurs des variables utilisées (affichage des valeurs résolues, historique). */
+  values: Record<string, string>;
 }
 
 export type LaunchRuns = Readonly<Record<string, LaunchRun>>;
 
 export interface LaunchOptions {
-  resolve?: ItemResolver;
+  /** Valeurs des variables du preset, saisies au lancement. */
+  values?: Readonly<Record<string, string>>;
 }
 
 export interface LaunchEngine {
@@ -94,8 +93,9 @@ export function createLaunchEngine(system: SystemAdapter, options: EngineOptions
       if (previous?.inProgress) return undefined;
       const startedAt = now();
 
-      // 1-3. Résoudre, valider, planifier
-      const steps = planLaunch(preset.items, { resolve: launchOptions.resolve, previous: previous?.items });
+      // 1-3. Résoudre (variables), valider, planifier
+      const values = { ...launchOptions.values };
+      const steps = planLaunch(preset.items, { resolve: createVariableResolver(values), previous: previous?.items });
       commit({
         ...runs,
         [preset.id]: {
@@ -103,6 +103,7 @@ export function createLaunchEngine(system: SystemAdapter, options: EngineOptions
           startedAt: startedAt.toISOString(),
           inProgress: true,
           items: Object.fromEntries(steps.map((step) => [step.item.id, step.initial])),
+          values,
         },
       });
 
@@ -124,14 +125,17 @@ export function createLaunchEngine(system: SystemAdapter, options: EngineOptions
       const run = runs[preset.id];
       if (!item || run?.inProgress || isRunning(run?.items[itemId])) return;
 
-      if (!run) {
+      const values = { ...launchOptions.values };
+      if (run) {
+        updateRun(preset.id, (current) => ({ ...current, values: { ...current.values, ...values } }));
+      } else {
         commit({
           ...runs,
-          [preset.id]: { presetId: preset.id, startedAt: now().toISOString(), inProgress: false, items: {} },
+          [preset.id]: { presetId: preset.id, startedAt: now().toISOString(), inProgress: false, items: {}, values },
         });
       }
       // Même pipeline qu'un lancement complet, sur ce seul item (activé pour l'occasion).
-      const [step] = planLaunch([{ ...item, enabled: true }], { resolve: launchOptions.resolve });
+      const [step] = planLaunch([{ ...item, enabled: true }], { resolve: createVariableResolver(values) });
       if (!step) return;
       setItem(preset.id, itemId, step.initial);
       if (step.execute) {

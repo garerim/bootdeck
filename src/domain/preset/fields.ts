@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hasVariables } from "@/domain/variables/template";
 
 /**
  * Règles de validation réutilisables pour les champs d'un preset.
@@ -83,6 +84,32 @@ export const httpUrl = z
   .min(1, "URL is required")
   .max(2048, "URL is too long")
   .refine(isHttpUrl, "Must be an http:// or https:// URL");
+
+/**
+ * Version « modèle » d'une règle, pour le stockage.
+ *
+ * Si la valeur contient des variables (`http://localhost:{port}`), on ne peut
+ * vérifier que sa forme générale : la règle stricte s'appliquera au lancement,
+ * une fois les variables remplacées. Sans variable, la règle stricte s'applique
+ * dès l'enregistrement, exactement comme avant.
+ */
+export function templatable(strict: z.ZodType<string>, maxLength: number) {
+  const template = z
+    .string()
+    .min(1, "Value is required")
+    .max(maxLength, "Value is too long")
+    .refine((value) => !hasControlChars(value), "Value contains invalid characters");
+
+  return z
+    .string()
+    .trim()
+    .superRefine((value, ctx) => {
+      const result = (hasVariables(value) ? template : strict).safeParse(value);
+      if (!result.success) {
+        for (const issue of result.error.issues) ctx.addIssue({ code: "custom", message: issue.message });
+      }
+    });
+}
 
 /** Une seule ligne : pas de retour à la ligne caché qui enchaînerait une
  *  deuxième commande invisible dans l'interface. */

@@ -13,6 +13,7 @@ export const demoPresets: Preset[] = [
     name: "Dev SaaS",
     description: "Next.js + Supabase",
     icon: "🧑‍💻",
+    variables: [],
     items: [
       {
         id: "76146a7a-7ae5-409c-825a-016404840bdb",
@@ -72,6 +73,7 @@ export const demoPresets: Preset[] = [
     name: "Code Review",
     description: "Pull requests and branches",
     icon: "🔍",
+    variables: [],
     items: [
       {
         id: "96815e8f-7f19-48e3-8f0e-3ce269e8601b",
@@ -102,6 +104,7 @@ export const demoPresets: Preset[] = [
     id: "e9f5af43-745c-4dc0-9e0b-988ac953d804",
     name: "Design Handoff",
     icon: "🎨",
+    variables: [],
     items: [
       {
         id: "c4e7db73-b4e5-425a-b62c-e77a751e3302",
@@ -127,5 +130,42 @@ export const demoPresets: Preset[] = [
     ],
     createdAt: "2026-09-25T14:30:00.000Z",
     updatedAt: "2026-09-26T10:05:00.000Z",
+  },
+  {
+    id: "8cca43f7-81fe-4382-912c-9daadb45479e",
+    name: "Next.js project",
+    description: "Any project in ~/Projects, on any port",
+    icon: "🚀",
+    // Un seul preset pour tous les projets : les valeurs sont demandées au lancement.
+    variables: [
+      { key: "project", label: "Project", kind: "text", defaultValue: "my-saas" },
+      { key: "project_path", label: "Project folder", kind: "path", defaultValue: "~/Projects/{project}" },
+      { key: "port", kind: "port", defaultValue: "3000" },
+    ],
+    items: [
+      {
+        id: "d1247283-1c33-49a9-91c8-51b3409dfe73",
+        type: "application",
+        name: "VS Code",
+        enabled: true,
+        config: { path: "code", args: ["."], workingDirectory: "{project_path}" },
+      },
+      {
+        id: "5ead34d7-fb67-4efd-8138-b9351d63f5f4",
+        type: "command",
+        name: "Dev server",
+        enabled: true,
+        config: { command: "npm run dev -- --port {port}", workingDirectory: "{project_path}" },
+      },
+      {
+        id: "d7d473be-6c5d-4c14-98b9-605f9deb6415",
+        type: "url",
+        name: "App",
+        enabled: true,
+        config: { url: "http://localhost:{port}" },
+      },
+    ],
+    createdAt: "2026-09-28T18:00:00.000Z",
+    updatedAt: "2026-09-28T18:00:00.000Z",
   },
 ];

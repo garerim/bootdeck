@@ -5,6 +5,7 @@ import {
   emptyItemDraft,
   emptyPresetDraft,
   itemFieldKey,
+  variableFieldKey,
   moveItem,
   presetToDraft,
   validateDraft,
@@ -103,5 +104,32 @@ describe("moveItem", () => {
     [2, 1, ["a", "b", "c"]],
   ])("déplace l'index %i de %i", (from, offset, expected) => {
     expect(moveItem(["a", "b", "c"], from, offset)).toEqual(expected);
+  });
+});
+
+describe("validateDraft — variables", () => {
+  const variable = (id: string, key: string) => ({ id, key, label: "", kind: "text" as const, defaultValue: "" });
+
+  it("rattache l'erreur d'une variable à sa ligne, par son id", () => {
+    const draft = draftWith({ variables: [variable("a", "project"), variable("b", "project")] });
+    const result = validateDraft(draft, IDENTITY, NOW);
+    expect(result).toEqual({ ok: false, errors: { [variableFieldKey("b", "key")]: "This name is already used" } });
+  });
+
+  it("rattache une variable inconnue au champ de l'item qui l'utilise", () => {
+    const url = { ...emptyItemDraft("url", ITEM_ID), name: "App", url: "http://localhost:{port}" };
+    const result = validateDraft(draftWith({ items: [url] }), IDENTITY, NOW);
+    expect(result).toMatchObject({
+      ok: false,
+      errors: { [itemFieldKey(ITEM_ID, "url")]: expect.stringContaining("Unknown variable {port}") },
+    });
+  });
+
+  it("accepte le même champ une fois la variable déclarée, et omet un libellé vide", () => {
+    const url = { ...emptyItemDraft("url", ITEM_ID), name: "App", url: "http://localhost:{port}" };
+    const port = { ...variable("c", "port"), kind: "port" as const, defaultValue: "3000" };
+    const result = validateDraft(draftWith({ variables: [port], items: [url] }), IDENTITY, NOW);
+    expect(result).toMatchObject({ ok: true, preset: { variables: [{ key: "port", kind: "port", defaultValue: "3000" }] } });
+    expect(result.ok && result.preset.variables[0]?.label).toBeUndefined();
   });
 });

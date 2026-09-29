@@ -103,3 +103,37 @@ describe("PresetItemSchema", () => {
     expect(PresetItemSchema.safeParse(item).success).toBe(false);
   });
 });
+
+describe("variables et modèles", () => {
+  const nextjs = demoPreset(3); // variables project, project_path, port
+
+  it("accepte un champ modèle à l'enregistrement, mais pas au lancement (schéma strict)", () => {
+    expect(PresetSchema.safeParse(nextjs).success).toBe(true);
+    expect(PresetItemSchema.safeParse(nextjs.items[2]).success).toBe(false); // http://localhost:{port}
+  });
+
+  it("valide strictement, dès l'enregistrement, un champ sans variable", () => {
+    const withBadUrl = {
+      ...nextjs,
+      items: [{ ...urlItem(), config: { url: "javascript:alert(1)" } }],
+    };
+    expect(PresetSchema.safeParse(withBadUrl).success).toBe(false);
+  });
+
+  it("refuse deux variables du même nom", () => {
+    const duplicated = { ...nextjs, variables: [...nextjs.variables, { key: "port", kind: "port" as const }] };
+    const result = PresetSchema.safeParse(duplicated);
+    expect(result.error?.issues[0]).toMatchObject({ path: ["variables", 3, "key"], message: "This name is already used" });
+  });
+
+  it("refuse une valeur par défaut qui utilise une variable déclarée après elle", () => {
+    const reversed = { ...nextjs, variables: [...nextjs.variables].reverse() };
+    const result = PresetSchema.safeParse(reversed);
+    expect(result.error?.issues.some((issue) => issue.path.join(".") === "variables.1.defaultValue")).toBe(true);
+  });
+
+  it("refuse un nom de variable qui ne s'écrirait pas {nom}", () => {
+    const invalid = { ...nextjs, variables: [{ key: "Project Name", kind: "text" as const }], items: [] };
+    expect(PresetSchema.safeParse(invalid).error?.issues[0]?.path).toEqual(["variables", 0, "key"]);
+  });
+});

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Ellipsis, LoaderCircle, Pencil, Play, SearchX, Trash2 } from "lucide-react";
+import { Braces, Copy, Ellipsis, LoaderCircle, Pencil, Play, SearchX, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { Page, PageHeader } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { DeletePresetDialog } from "@/features/presets/delete-preset-dialog";
 import { PresetIcon } from "@/features/presets/icons";
 import { formatItemSummary } from "@/features/presets/item-types";
 import { PresetItemRow } from "@/features/presets/preset-item-row";
+import { startLaunch } from "@/features/launch/start-launch";
 import { useLaunchStore } from "@/stores/launch-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
@@ -29,8 +30,6 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
   const removePreset = usePresetsStore((state) => state.remove);
   const duplicatePreset = usePresetsStore((state) => state.duplicate);
   const run = useLaunchStore((state) => state.runs[presetId]);
-  const launchPreset = useLaunchStore((state) => state.launchPreset);
-  const launchItem = useLaunchStore((state) => state.launchItem);
   const stopItem = useLaunchStore((state) => state.stopItem);
   const stopAllItems = useLaunchStore((state) => state.stopAllItems);
   const clearRun = useLaunchStore((state) => state.clearRun);
@@ -113,7 +112,7 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
               <Button
                 disabled={launching || !hasEnabledItems}
                 title={hasEnabledItems ? undefined : "All items are disabled"}
-                onClick={() => void launchPreset(preset)}
+                onClick={() => startLaunch(preset)}
               >
                 {launching ? (
                   <LoaderCircle data-icon="inline-start" className="animate-spin" />
@@ -127,6 +126,18 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
         />
       }
     >
+      {preset.variables.length > 0 && (
+        <p className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+          <Braces className="size-3.5" aria-hidden />
+          Asks at launch:
+          {preset.variables.map((variable) => (
+            <span key={variable.key} className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-foreground">
+              {`{${variable.key}}`}
+            </span>
+          ))}
+        </p>
+      )}
+
       <section aria-labelledby="launch-order-title">
         <div className="mb-3 flex items-baseline justify-between gap-4">
           <h2 id="launch-order-title" className="text-sm font-semibold">
@@ -178,8 +189,9 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
                 item={item}
                 position={index + 1}
                 run={run?.items[item.id]}
+                values={run?.values}
                 canRun={!launching}
-                onRun={() => void launchItem(preset, item.id)}
+                onRun={() => startLaunch(preset, item.id)}
                 onStop={() => void stopItem(presetId, item.id)}
               />
             ))}

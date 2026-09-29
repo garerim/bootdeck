@@ -24,6 +24,7 @@ import {
 import { EmojiPicker } from "@/features/presets/editor/emoji-picker";
 import { ItemEditor } from "@/features/presets/editor/item-editor";
 import { TextField } from "@/features/presets/editor/text-field";
+import { VariablesEditor } from "@/features/presets/editor/variables-editor";
 import { ITEM_TYPE_META } from "@/features/presets/item-types";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
@@ -127,6 +128,8 @@ function PresetEditorForm(props: PresetEditorFormProps) {
     setDraft((current) => ({ ...current, items: current.items.filter((item) => item.id !== itemId) }));
   }
 
+  const declaredKeys = draft.variables.map((variable) => variable.key.trim()).filter(Boolean);
+
   const canAddItem = draft.items.length < MAX_ITEMS_PER_PRESET;
 
   return (
@@ -192,13 +195,28 @@ function PresetEditorForm(props: PresetEditorFormProps) {
           />
         </section>
 
+        <VariablesEditor
+          variables={draft.variables}
+          errors={errors}
+          onChange={(variables) => update({ variables })}
+        />
+
         <section aria-labelledby="items-title" className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 id="items-title" className="text-sm font-semibold">
                 Items
               </h2>
-              <p className="text-xs text-muted-foreground">Launched from top to bottom.</p>
+              <p className="text-xs text-muted-foreground">
+                Launched from top to bottom.
+                {declaredKeys.length > 0 && (
+                  <>
+                    {" "}
+                    Available:{" "}
+                    <span className="font-mono">{declaredKeys.map((key) => `{${key}}`).join(" ")}</span>
+                  </>
+                )}
+              </p>
             </div>
             {draft.items.length > 0 && <AddItemMenu onAdd={addItem} disabled={!canAddItem} />}
           </div>

@@ -2,15 +2,14 @@ import { Layers, Plus } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { Page, PageHeader } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
+import { startLaunch } from "@/features/launch/start-launch";
 import { PresetCard } from "@/features/presets/preset-card";
-import { useLaunchStore } from "@/stores/launch-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
 
 export function PresetsPage() {
   const presets = usePresetsStore((state) => state.presets);
   const navigate = useNavigationStore((state) => state.navigate);
-  const launchPreset = useLaunchStore((state) => state.launchPreset);
 
   const createButton = (
     <Button onClick={() => navigate({ name: "preset-new" })}>
@@ -49,7 +48,7 @@ export function PresetsPage() {
               onOpen={() => navigate({ name: "preset-detail", presetId: preset.id })}
               onLaunch={() => {
                 // Le lancement continue en arrière-plan ; le détail affiche sa progression.
-                void launchPreset(preset);
+                startLaunch(preset);
                 navigate({ name: "preset-detail", presetId: preset.id });
               }}
             />

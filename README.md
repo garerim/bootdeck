@@ -37,6 +37,16 @@ pas : elle propose de le renommer en `presets.invalid-<horodatage>.json` et de r
 
 Dans un navigateur (`npm run dev:web`), les presets de démonstration sont gardés en mémoire uniquement.
 
+## Variables
+
+Un preset peut déclarer des variables (`{project}`, `{project_path}`, `{port}`…), demandées à chaque
+lancement et utilisables dans tous les champs des items : `~/Projects/{project}`, `http://localhost:{port}`.
+
+- Une valeur par défaut peut utiliser les variables déclarées avant elle : `~/Projects/{project}`.
+- Types : **text** (lettres, chiffres, `.`, `-`, `_`), **path** (absolu ou `~`), **port** (1–65535).
+  Aucun caractère spécial de shell n'est accepté, pour qu'une valeur ne puisse jamais ajouter de commande.
+- `{{` et `}}` écrivent des accolades littérales ; `{Majuscule}` ou `{"json": 1}` ne sont pas des variables.
+
 ## Organisation
 
 ```text

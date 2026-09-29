@@ -125,26 +125,43 @@ describe("launch engine — validation et résolution", () => {
     });
   });
 
-  it("exécute la valeur transformée par le résolveur (point d'entrée des variables)", async () => {
+  it("remplace les variables avant d'exécuter, et garde les valeurs utilisées", async () => {
     const fake = createFakeSystem();
     const engine = createLaunchEngine(fake.system);
-    const preset = { ...devSaas, items: devSaas.items.filter((item) => item.type === "url").slice(0, 1) };
-    await engine.launchPreset(preset, {
-      resolve: (item) =>
-        item.type === "url" ? { ok: true, item: { ...item, config: { url: "http://localhost:5173" } } } : { ok: true, item },
-    });
+    const nextjs = demoPreset(3); // VS Code, npm run dev -- --port {port}, http://localhost:{port}
+    const values = { project: "demo", project_path: "C:/Projects/demo", port: "5173" };
+    await engine.launchPreset(nextjs, { values });
 
-    expect(fake.calls).toEqual(["url http://localhost:5173"]);
+    expect(fake.calls).toEqual([
+      "app code . in C:/Projects/demo",
+      "command npm run dev -- --port 5173 in C:/Projects/demo",
+      "url http://localhost:5173",
+    ]);
+    expect(engine.getRuns()[nextjs.id]?.values).toEqual(values);
   });
 
-  it("marque en échec, sans l'exécuter, un item que le résolveur refuse", async () => {
+  it("n'exécute jamais un item dont une variable n'a pas de valeur", async () => {
     const fake = createFakeSystem();
     const engine = createLaunchEngine(fake.system);
-    const preset = { ...devSaas, items: devSaas.items.slice(3, 4) };
-    await engine.launchPreset(preset, { resolve: () => ({ ok: false, error: "Unknown variable {port}." }) });
+    const nextjs = demoPreset(3);
+    await engine.launchPreset(nextjs, { values: { project: "demo" } });
 
     expect(fake.calls).toEqual([]);
-    expect(engine.getRuns()[preset.id]?.items[preset.items[0]?.id ?? ""]?.error).toBe("Unknown variable {port}.");
+    expect(engine.getRuns()[nextjs.id]?.items[nextjs.items[2]?.id ?? ""]).toMatchObject({
+      status: "failed",
+      error: "Not launched: no value for {port}.",
+    });
+  });
+
+  it("refuse, au moment du lancement, une valeur qui rend le champ invalide", async () => {
+    const fake = createFakeSystem();
+    const engine = createLaunchEngine(fake.system);
+    const nextjs = demoPreset(3);
+    // Contourne la validation de la boîte de lancement : le moteur doit quand même refuser.
+    await engine.launchPreset(nextjs, { values: { project: "x", project_path: "relative/path", port: "3000" } });
+
+    expect(fake.calls).toEqual(["url http://localhost:3000"]);
+    expect(engine.getRuns()[nextjs.id]?.items[nextjs.items[0]?.id ?? ""]?.error).toContain("Not launched:");
   });
 });
 

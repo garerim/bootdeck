@@ -1,4 +1,5 @@
 import { PresetSchema, type Preset, type PresetItemType } from "@/domain/preset/schema";
+import type { VariableDefinition, VariableKindId } from "@/domain/variables/variables";
 import { formatArguments, parseArguments } from "@/features/presets/editor/arguments";
 
 /**
@@ -22,10 +23,20 @@ export interface ItemDraft {
   command: string;
 }
 
+/** Variable telle que saisie ; `id` ne sert qu'au formulaire (clé React, erreurs). */
+export interface VariableDraft {
+  id: string;
+  key: string;
+  label: string;
+  kind: VariableKindId;
+  defaultValue: string;
+}
+
 export interface PresetDraft {
   name: string;
   description: string;
   icon: string;
+  variables: VariableDraft[];
   items: ItemDraft[];
 }
 
@@ -45,7 +56,17 @@ export type FieldErrors = Record<string, string>;
 export type DraftValidation = { ok: true; preset: Preset } | { ok: false; errors: FieldErrors };
 
 export function emptyPresetDraft(): PresetDraft {
-  return { name: "", description: "", icon: "", items: [] };
+  return { name: "", description: "", icon: "", variables: [], items: [] };
+}
+
+export function variableToDraft(variable: VariableDefinition, id: string): VariableDraft {
+  return {
+    id,
+    key: variable.key,
+    label: variable.label ?? "",
+    kind: variable.kind,
+    defaultValue: variable.defaultValue ?? "",
+  };
 }
 
 export function emptyItemDraft(type: PresetItemType, id: string): ItemDraft {
@@ -67,6 +88,7 @@ export function presetToDraft(preset: Preset): PresetDraft {
     name: preset.name,
     description: preset.description ?? "",
     icon: preset.icon ?? "",
+    variables: preset.variables.map((variable) => variableToDraft(variable, crypto.randomUUID())),
     items: preset.items.map((item) => {
       const draft = emptyItemDraft(item.type, item.id);
       draft.name = item.name;
@@ -99,6 +121,12 @@ export function validateDraft(draft: PresetDraft, identity: PresetIdentity, now:
     name: draft.name,
     description: optional(draft.description),
     icon: optional(draft.icon),
+    variables: draft.variables.map((variable) => ({
+      key: variable.key,
+      label: optional(variable.label),
+      kind: variable.kind,
+      defaultValue: optional(variable.defaultValue),
+    })),
     items: draft.items.map(itemCandidate),
     createdAt: identity.createdAt,
     updatedAt: now.toISOString(),
@@ -113,6 +141,10 @@ export function validateDraft(draft: PresetDraft, identity: PresetIdentity, now:
     errors[key] ??= issue.message; // premier message par champ
   }
   return { ok: false, errors };
+}
+
+export function variableFieldKey(variableId: string, field: keyof VariableDraft): string {
+  return `variables.${variableId}.${field}`;
 }
 
 export function itemFieldKey(itemId: string, field: keyof ItemDraft): string {
@@ -172,6 +204,9 @@ const CONFIG_FIELDS: Record<string, keyof ItemDraft> = {
 /** Traduit un chemin d'erreur Zod (`["items", 2, "config", "url"]`) en clé de champ du formulaire. */
 function fieldKey(path: readonly PropertyKey[], draft: PresetDraft): string {
   const [root, index, section, field] = path;
+  if (root === "variables" && typeof index === "number") {
+    return `variables.${draft.variables[index]?.id ?? String(index)}.${String(section)}`;
+  }
   if (root !== "items" || typeof index !== "number") return String(root ?? "form");
 
   const itemId = draft.items[index]?.id ?? String(index);

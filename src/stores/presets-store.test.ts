@@ -67,7 +67,7 @@ describe("presets store — sauvegarde", () => {
     await store.getState().flush();
 
     expect(written).toHaveLength(1);
-    expect(savedNames(written[0])).toEqual(["Dev SaaS", "Design Handoff"]);
+    expect(savedNames(written[0])).toEqual(["Dev SaaS", "Design Handoff", "Next.js project"]);
   });
 
   it("n'écrit JAMAIS après un échec de lecture, pour ne pas écraser le fichier", async () => {
@@ -103,8 +103,8 @@ describe("presets store — sauvegarde", () => {
     await store.getState().flush();
 
     expect(written.map(savedNames)).toEqual([
-      ["Code Review", "Design Handoff"],
-      ["Design Handoff"],
+      ["Code Review", "Design Handoff", "Next.js project"],
+      ["Design Handoff", "Next.js project"],
     ]);
   });
 

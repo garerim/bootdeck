@@ -1,6 +1,11 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-import { createLaunchEngine, type LaunchEngine, type LaunchRuns } from "@/domain/launch/engine";
+import {
+  createLaunchEngine,
+  type LaunchEngine,
+  type LaunchOptions,
+  type LaunchRuns,
+} from "@/domain/launch/engine";
 import type { Preset } from "@/domain/preset/schema";
 import { createSystemAdapter } from "@/platform/system-adapter";
 
@@ -12,8 +17,8 @@ export type { LaunchRun } from "@/domain/launch/engine";
  */
 export interface LaunchState {
   runs: LaunchRuns;
-  launchPreset: (preset: Preset) => Promise<void>;
-  launchItem: (preset: Preset, itemId: string) => Promise<void>;
+  launchPreset: (preset: Preset, options?: LaunchOptions) => Promise<void>;
+  launchItem: (preset: Preset, itemId: string, options?: LaunchOptions) => Promise<void>;
   stopItem: (presetId: string, itemId: string) => Promise<void>;
   stopAllItems: (presetId: string) => Promise<void>;
   clearRun: (presetId: string) => void;
@@ -22,10 +27,10 @@ export interface LaunchState {
 export function createLaunchStore(engine: LaunchEngine) {
   const store = createStore<LaunchState>()(() => ({
     runs: engine.getRuns(),
-    launchPreset: async (preset) => {
-      await engine.launchPreset(preset);
+    launchPreset: async (preset, options) => {
+      await engine.launchPreset(preset, options);
     },
-    launchItem: (preset, itemId) => engine.launchItem(preset, itemId),
+    launchItem: (preset, itemId, options) => engine.launchItem(preset, itemId, options),
     stopItem: (presetId, itemId) => engine.stopItem(presetId, itemId),
     stopAllItems: (presetId) => engine.stopAllItems(presetId),
     clearRun: (presetId) => engine.clearRun(presetId),

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ItemRun } from "@/domain/launch/item-run";
 import type { PresetItem } from "@/domain/preset/schema";
+import { createVariableResolver } from "@/domain/variables/variables";
 import { CommandOutput } from "@/features/launch/command-output";
 import { ItemRunStatusBadge } from "@/features/launch/item-run-status";
 import { ItemTypeIcon } from "@/features/presets/icons";
@@ -15,16 +16,21 @@ interface PresetItemRowProps {
   position: number;
   /** État du dernier lancement de cet item, s'il a été lancé. */
   run?: ItemRun;
+  /** Valeurs des variables de ce lancement : on affiche alors ce qui a réellement été exécuté. */
+  values?: Readonly<Record<string, string>>;
   /** Faux pendant le lancement du preset entier. */
   canRun: boolean;
   onRun: () => void;
   onStop: () => void;
 }
 
-export function PresetItemRow({ item, position, run, canRun, onRun, onStop }: PresetItemRowProps) {
+export function PresetItemRow({ item, position, run, values, canRun, onRun, onStop }: PresetItemRowProps) {
   const [showOutput, setShowOutput] = useState(false);
-  const target = itemTarget(item);
-  const workingDirectory = itemWorkingDirectory(item);
+  const resolved = run && values ? createVariableResolver(values)(item) : undefined;
+  const shown = resolved?.ok ? resolved.item : item;
+  const target = itemTarget(shown);
+  const template = itemTarget(item);
+  const workingDirectory = itemWorkingDirectory(shown);
   const isCommand = item.type === "command";
   const isRunning = run?.status === "running";
   const canStop = isCommand && isRunning && run.processId !== undefined && !run.stopRequested;
@@ -38,7 +44,10 @@ export function PresetItemRow({ item, position, run, canRun, onRun, onStop }: Pr
 
         <div className={cn("min-w-0 flex-1", !item.enabled && !run && "opacity-60")}>
           <p className="truncate text-sm font-medium">{item.name}</p>
-          <p className="truncate font-mono text-xs text-muted-foreground" title={target}>
+          <p
+            className="truncate font-mono text-xs text-muted-foreground"
+            title={target === template ? target : `${target}\nTemplate: ${template}`}
+          >
             {target}
             {workingDirectory && <span className="text-muted-foreground/70"> · in {workingDirectory}</span>}
           </p>

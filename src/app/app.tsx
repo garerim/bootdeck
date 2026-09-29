@@ -1,5 +1,6 @@
 import { LoaderCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
+import { LaunchDialog } from "@/features/launch/launch-dialog";
 import { PresetEditorPage } from "@/features/presets/editor/preset-editor-page";
 import { LoadErrorPage } from "@/features/presets/load-error-page";
 import { PresetDetailPage } from "@/features/presets/preset-detail-page";
@@ -20,6 +21,8 @@ export function App() {
       {load.status === "loading" && <LoadingView />}
       {load.status === "error" && <LoadErrorPage error={load.error} filePath={filePath} />}
       {load.status === "ready" && <RouteView route={route} />}
+      {/* Une seule boîte de lancement pour toute l'app, ouverte par startLaunch() */}
+      <LaunchDialog />
     </AppShell>
   );
 }
