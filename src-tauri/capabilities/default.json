@@ -12,6 +12,8 @@
     "allow-open-folder",
     "allow-launch-application",
     "allow-execute-command",
-    "allow-stop-process"
+    "allow-stop-process",
+    "allow-pick-folder",
+    "allow-pick-program"
   ]
 }

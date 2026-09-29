@@ -17,6 +17,9 @@ use services::storage::{PresetFileStore, PRESETS_FILE_NAME};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Utilisé uniquement depuis Rust (commands/dialogs.rs). Son API JavaScript reste
+        // bloquée : aucune permission `dialog:*` n'est accordée dans les capabilities.
+        .plugin(tauri_plugin_dialog::init())
         .manage(ProcessRegistry::default())
         .setup(|app| {
             // Dossier de données propre à l'app (Windows : %APPDATA%\dev.workspacepresets.desktop).
@@ -33,6 +36,8 @@ pub fn run() {
             commands::launcher::launch_application,
             commands::processes::execute_command,
             commands::processes::stop_process,
+            commands::dialogs::pick_folder,
+            commands::dialogs::pick_program,
         ])
         .build(tauri::generate_context!())
         // Échec au démarrage (config invalide, WebView absente) : rien à récupérer, on s'arrête.

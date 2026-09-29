@@ -6,6 +6,7 @@
 //! Toute nouvelle commande doit aussi être déclarée dans `build.rs` et autorisée
 //! dans `capabilities/default.json`, sinon Tauri la refuse.
 
+pub mod dialogs;
 pub mod launcher;
 pub mod processes;
 pub mod storage;

@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ interface TextFieldProps extends Omit<ComponentProps<"input">, "id" | "value" | 
   optional?: boolean;
   /** Police à chasse fixe, pour les chemins, URLs et commandes. */
   mono?: boolean;
+  /** Bouton affiché à droite du champ (ex. « Parcourir… »). */
+  action?: ReactNode;
 }
 
 export function TextField({
@@ -24,11 +26,26 @@ export function TextField({
   description,
   optional = false,
   mono = false,
+  action,
   className,
   ...inputProps
 }: TextFieldProps) {
   const hintId = `${id}-hint`;
   const showHint = Boolean(error ?? description);
+
+  const input = (
+    <Input
+      id={id}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={showHint ? hintId : undefined}
+      autoComplete="off"
+      spellCheck={mono ? false : undefined}
+      className={cn(mono && "font-mono text-[13px]")}
+      {...inputProps}
+    />
+  );
 
   return (
     <Field data-invalid={error ? true : undefined} className={className}>
@@ -36,17 +53,14 @@ export function TextField({
         {label}
         {optional && <span className="font-normal text-muted-foreground">(optional)</span>}
       </FieldLabel>
-      <Input
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={showHint ? hintId : undefined}
-        autoComplete="off"
-        spellCheck={mono ? false : undefined}
-        className={cn(mono && "font-mono text-[13px]")}
-        {...inputProps}
-      />
+      {action ? (
+        <div className="flex gap-2">
+          {input}
+          {action}
+        </div>
+      ) : (
+        input
+      )}
       {error ? (
         <FieldError id={hintId}>{error}</FieldError>
       ) : (

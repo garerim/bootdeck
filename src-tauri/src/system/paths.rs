@@ -37,6 +37,21 @@ pub fn absolute_path(input: &str, home: &Path) -> Result<PathBuf, AppError> {
     }
 }
 
+/// Dossier où ouvrir une boîte de dialogue : celui déjà saisi dans le champ s'il
+/// existe (ou le dossier qui contient le fichier saisi), sinon le dossier personnel.
+pub fn start_directory(current_value: Option<&str>, home: &Path) -> PathBuf {
+    let Some(path) = current_value.and_then(|value| absolute_path(value, home).ok()) else {
+        return home.to_path_buf();
+    };
+    if path.is_dir() {
+        return path;
+    }
+    match path.parent() {
+        Some(parent) if parent.is_dir() => parent.to_path_buf(),
+        _ => home.to_path_buf(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -80,5 +95,21 @@ mod tests {
     #[test]
     fn accepts_home_relative_paths() {
         assert_eq!(absolute_path(" ~/app ", &home()).unwrap(), home().join("app"));
+    }
+
+    #[test]
+    fn dialogs_start_in_the_folder_already_entered() {
+        let root = std::env::temp_dir().join(format!("workspace-presets-start-dir-{}", std::process::id()));
+        let project = root.join("project");
+        std::fs::create_dir_all(&project).unwrap();
+        std::fs::write(project.join("app.exe"), "").unwrap();
+
+        assert_eq!(start_directory(Some("~/project"), &root), project, "existing folder");
+        assert_eq!(start_directory(Some("~/project/app.exe"), &root), project, "folder of a file");
+        assert_eq!(start_directory(Some("~/project/missing/deeper"), &root), root, "missing: home");
+        assert_eq!(start_directory(Some("code"), &root), root, "program name: home");
+        assert_eq!(start_directory(None, &root), root, "empty field: home");
+
+        let _ = std::fs::remove_dir_all(&root);
     }
 }

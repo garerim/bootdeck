@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { BrowseButton } from "@/features/presets/editor/browse-button";
 import { itemFieldKey, type FieldErrors, type ItemDraft } from "@/features/presets/editor/draft";
 import { TextField } from "@/features/presets/editor/text-field";
 import { ItemTypeIcon } from "@/features/presets/icons";
@@ -20,8 +22,23 @@ interface ItemEditorProps {
 
 export function ItemEditor({ item, position, total, errors, autoFocus, onChange, onMove, onRemove }: ItemEditorProps) {
   const meta = ITEM_TYPE_META[item.type];
+  const [pickerErrors, setPickerErrors] = useState<Partial<Record<PathField, string>>>({});
   const fieldId = (field: keyof ItemDraft) => `${item.id}-${field}`;
-  const error = (field: keyof ItemDraft) => errors[itemFieldKey(item.id, field)];
+  const error = (field: keyof ItemDraft) =>
+    errors[itemFieldKey(item.id, field)] ?? (isPathField(field) ? pickerErrors[field] : undefined);
+
+  /** Bouton « Parcourir… » d'un champ chemin : le chemin choisi remplace la valeur. */
+  const browse = (field: PathField, kind: "folder" | "program") => (
+    <BrowseButton
+      kind={kind}
+      value={item[field]}
+      onPicked={(path) => {
+        setPickerErrors((current) => ({ ...current, [field]: undefined }));
+        onChange(field === "path" ? { path } : { workingDirectory: path });
+      }}
+      onError={(message) => setPickerErrors((current) => ({ ...current, [field]: message }))}
+    />
+  );
 
   return (
     <div className={cn("rounded-xl border bg-card", !item.enabled && "bg-muted/40")}>
@@ -91,6 +108,7 @@ export function ItemEditor({ item, position, total, errors, autoFocus, onChange,
               onChange={(path) => onChange({ path })}
               error={error("path")}
               placeholder="code, wt, or C:\…\app.exe"
+              action={browse("path", "program")}
               mono
             />
             <TextField
@@ -111,6 +129,7 @@ export function ItemEditor({ item, position, total, errors, autoFocus, onChange,
               onChange={(workingDirectory) => onChange({ workingDirectory })}
               error={error("workingDirectory")}
               placeholder="~/Projects/my-app"
+              action={browse("workingDirectory", "folder")}
               optional
               mono
             />
@@ -138,6 +157,7 @@ export function ItemEditor({ item, position, total, errors, autoFocus, onChange,
             onChange={(path) => onChange({ path })}
             error={error("path")}
             placeholder="~/Projects/my-app"
+            action={browse("path", "folder")}
             mono
           />
         )}
@@ -161,6 +181,7 @@ export function ItemEditor({ item, position, total, errors, autoFocus, onChange,
               error={error("workingDirectory")}
               description="Defaults to your home folder."
               placeholder="~/Projects/my-app"
+              action={browse("workingDirectory", "folder")}
               optional
               mono
             />
@@ -169,6 +190,13 @@ export function ItemEditor({ item, position, total, errors, autoFocus, onChange,
       </div>
     </div>
   );
+}
+
+/** Champs qui contiennent un chemin, et donc un bouton « Parcourir… ». */
+type PathField = "path" | "workingDirectory";
+
+function isPathField(field: keyof ItemDraft): field is PathField {
+  return field === "path" || field === "workingDirectory";
 }
 
 const NAME_PLACEHOLDERS: Record<ItemDraft["type"], string> = {
