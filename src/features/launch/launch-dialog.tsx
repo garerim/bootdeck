@@ -10,9 +10,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Preset } from "@/domain/preset/schema";
+import { latestValues } from "@/domain/session/session";
 import {
   VARIABLE_KINDS,
   createVariableResolver,
+  prefillInputs,
   resolveValues,
   variableLabel,
   variablesUsedBy,
@@ -23,6 +25,7 @@ import { ItemTypeIcon } from "@/features/presets/icons";
 import { itemTarget, itemWorkingDirectory } from "@/features/presets/item-types";
 import { launchStore } from "@/stores/launch-store";
 import { usePresetsStore } from "@/stores/presets-store";
+import { useSessionsStore } from "@/stores/sessions-store";
 
 /** Boîte « valeurs des variables », montée une seule fois dans l'application. */
 export function LaunchDialog() {
@@ -40,6 +43,7 @@ export function LaunchDialog() {
           key={`${request.presetId}:${request.itemId ?? "all"}`}
           preset={preset}
           itemId={request.itemId}
+          suggestedValues={request.suggestedValues}
           onDone={close}
         />
       )}
@@ -50,16 +54,20 @@ export function LaunchDialog() {
 interface LaunchValuesFormProps {
   preset: Preset;
   itemId?: string;
+  suggestedValues?: Readonly<Record<string, string>>;
   onDone: () => void;
 }
 
-function LaunchValuesForm({ preset, itemId, onDone }: LaunchValuesFormProps) {
-  const remembered = useLaunchRequestStore((state) => state.lastInputs[preset.id]);
+function LaunchValuesForm({ preset, itemId, suggestedValues, onDone }: LaunchValuesFormProps) {
+  const typed = useLaunchRequestStore((state) => state.lastInputs[preset.id]);
   const remember = useLaunchRequestStore((state) => state.remember);
+  const sessions = useSessionsStore((state) => state.sessions);
   const [inputs, setInputs] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      preset.variables.map((variable) => [variable.key, remembered?.[variable.key] ?? variable.defaultValue ?? ""]),
-    ),
+    suggestedValues
+      ? // « Launch again » : les valeurs de cette session-là
+        prefillInputs(preset.variables, undefined, suggestedValues)
+      : // Sinon : saisie récente, puis dernier lancement (même après un redémarrage), puis défauts
+        prefillInputs(preset.variables, typed, latestValues(sessions, preset.id)),
   );
   const [submitted, setSubmitted] = useState(false);
 

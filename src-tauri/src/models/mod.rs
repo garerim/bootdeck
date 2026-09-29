@@ -2,9 +2,19 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Réponse de `load_presets`.
+/// Fichier de données désigné par le front. Une liste fermée : le front ne peut
+/// jamais fournir un chemin, donc jamais viser un autre fichier du disque.
+/// JSON : `"presets"` ou `"sessions"`.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum DataFile {
+    Presets,
+    Sessions,
+}
+
+/// Réponse de `load_data_file`.
 #[derive(Debug, Serialize)]
-pub struct StoredPresetsFile {
+pub struct StoredDataFile {
     /// Emplacement du fichier, affiché dans les réglages et les messages d'erreur.
     pub path: String,
     /// `None` au premier lancement, quand le fichier n'existe pas encore.

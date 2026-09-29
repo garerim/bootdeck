@@ -5,6 +5,7 @@ import {
   VARIABLE_KINDS,
   createVariableResolver,
   defaultValueProblem,
+  prefillInputs,
   resolveValues,
   variableLabel,
   variablesUsedBy,
@@ -142,5 +143,30 @@ describe("variableLabel", () => {
   it("utilise le libellé, ou le dérive du nom", () => {
     expect(variableLabel({ key: "project", label: "Project", kind: "text" })).toBe("Project");
     expect(variableLabel({ key: "project_path", kind: "path" })).toBe("Project path");
+  });
+});
+
+describe("prefillInputs", () => {
+  const previous = { project: "blog", project_path: "~/Projects/blog", port: "5173" };
+
+  it("reprend les valeurs du dernier lancement, sauf celles qui dépendent d'autres variables", () => {
+    expect(prefillInputs(nextjs.variables, undefined, previous)).toEqual({
+      project: "blog",
+      project_path: "~/Projects/{project}", // reste un modèle : suivra {project} si on le change
+      port: "5173",
+    });
+  });
+
+  it("donne la priorité à ce qui a été saisi depuis l'ouverture de l'app", () => {
+    const typed = { project: "shop", project_path: "D:/work/shop", port: "8080" };
+    expect(prefillInputs(nextjs.variables, typed, previous)).toEqual(typed);
+  });
+
+  it("utilise les valeurs par défaut sans historique", () => {
+    expect(prefillInputs(nextjs.variables, undefined, undefined)).toEqual({
+      project: "my-saas",
+      project_path: "~/Projects/{project}",
+      port: "3000",
+    });
   });
 });

@@ -12,15 +12,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { summarizeItemRuns, type ItemRun } from "@/domain/launch/item-run";
 import { countItemsByType } from "@/domain/preset/operations";
+import { sessionStatus } from "@/domain/session/session";
 import { describeRunSummary } from "@/features/launch/format";
+import { startLaunch } from "@/features/launch/start-launch";
 import { DeletePresetDialog } from "@/features/presets/delete-preset-dialog";
 import { PresetIcon } from "@/features/presets/icons";
 import { formatItemSummary } from "@/features/presets/item-types";
 import { PresetItemRow } from "@/features/presets/preset-item-row";
-import { startLaunch } from "@/features/launch/start-launch";
+import { SessionStatusBadge } from "@/features/sessions/session-status-badge";
+import { cn } from "@/lib/utils";
 import { useLaunchStore } from "@/stores/launch-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
+import { useSessionsStore } from "@/stores/sessions-store";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
 const timeFormat = new Intl.DateTimeFormat("en", { timeStyle: "short" });
@@ -30,6 +34,7 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
   const removePreset = usePresetsStore((state) => state.remove);
   const duplicatePreset = usePresetsStore((state) => state.duplicate);
   const run = useLaunchStore((state) => state.runs[presetId]);
+  const lastSession = useSessionsStore((state) => state.sessions.find((session) => session.presetId === presetId));
   const stopItem = useLaunchStore((state) => state.stopItem);
   const stopAllItems = useLaunchStore((state) => state.stopAllItems);
   const clearRun = useLaunchStore((state) => state.clearRun);
@@ -199,7 +204,21 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
         )}
       </section>
 
-      <p className="mt-6 text-xs text-muted-foreground">
+      {!run && lastSession && (
+        <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Last launched {dateFormat.format(new Date(lastSession.startedAt))}</span>
+          <SessionStatusBadge status={sessionStatus(lastSession, false)} />
+          <button
+            type="button"
+            onClick={() => navigate({ name: "recent" })}
+            className="underline-offset-2 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            History
+          </button>
+        </div>
+      )}
+
+      <p className={cn("text-xs text-muted-foreground", !run && lastSession ? "mt-2" : "mt-6")}>
         Created {dateFormat.format(new Date(preset.createdAt))} · Updated{" "}
         {dateFormat.format(new Date(preset.updatedAt))}
       </p>

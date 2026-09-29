@@ -1,7 +1,7 @@
-//! Lecture et écriture du fichier des presets.
+//! Lecture et écriture des fichiers de données de l'application.
 //!
-//! Rust traite le contenu comme un document JSON versionné, sans connaître le
-//! détail des presets : le schéma complet est validé côté TypeScript (Zod).
+//! Rust traite chaque fichier comme un document JSON versionné, sans connaître
+//! son contenu : les schémas complets sont validés côté TypeScript (Zod).
 //! Rust garantit en revanche que l'écriture est atomique et qu'il n'écrit
 //! jamais autre chose qu'un document JSON versionné.
 
@@ -12,20 +12,45 @@ use std::sync::{Mutex, PoisonError};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::errors::AppError;
+use crate::models::DataFile;
 
 pub const PRESETS_FILE_NAME: &str = "presets.json";
+pub const SESSIONS_FILE_NAME: &str = "sessions.json";
+
+/// Les fichiers de données, dans le dossier de l'application. Le front les
+/// désigne par un nom fermé (`DataFile`), jamais par un chemin.
+pub struct DataFiles {
+    presets: JsonFileStore,
+    sessions: JsonFileStore,
+}
+
+impl DataFiles {
+    pub fn new(directory: &Path) -> Self {
+        Self {
+            presets: JsonFileStore::new(directory.join(PRESETS_FILE_NAME)),
+            sessions: JsonFileStore::new(directory.join(SESSIONS_FILE_NAME)),
+        }
+    }
+
+    pub fn get(&self, file: DataFile) -> &JsonFileStore {
+        match file {
+            DataFile::Presets => &self.presets,
+            DataFile::Sessions => &self.sessions,
+        }
+    }
+}
 
 /// Garde-fou : quelques dizaines de presets pèsent quelques kilo-octets.
 const MAX_CONTENT_BYTES: usize = 5 * 1024 * 1024;
 
-pub struct PresetFileStore {
+pub struct JsonFileStore {
     path: PathBuf,
     /// Sérialise les écritures : deux sauvegardes simultanées ne doivent pas
     /// se partager le fichier temporaire.
     write_lock: Mutex<()>,
 }
 
-impl PresetFileStore {
+impl JsonFileStore {
     pub fn new(path: PathBuf) -> Self {
         Self {
             path,
@@ -85,16 +110,22 @@ impl PresetFileStore {
         Ok(backup)
     }
 
-    /// `presets.invalid-<secondes Unix>.json`, suffixé si le nom est déjà pris.
+    /// `<nom>.invalid-<secondes Unix>.json` (ex. `presets.invalid-1790705571.json`),
+    /// suffixé si le nom est déjà pris.
     fn available_backup_path(&self) -> PathBuf {
         let seconds = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map(|elapsed| elapsed.as_secs())
             .unwrap_or_default();
-        let mut candidate = self.path.with_file_name(format!("presets.invalid-{seconds}.json"));
+        let stem = self
+            .path
+            .file_stem()
+            .map(|stem| stem.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "data".to_owned());
+        let mut candidate = self.path.with_file_name(format!("{stem}.invalid-{seconds}.json"));
         let mut counter = 1;
         while candidate.exists() {
-            candidate = self.path.with_file_name(format!("presets.invalid-{seconds}-{counter}.json"));
+            candidate = self.path.with_file_name(format!("{stem}.invalid-{seconds}-{counter}.json"));
             counter += 1;
         }
         candidate
@@ -146,8 +177,8 @@ mod tests {
             Self(path)
         }
 
-        fn store(&self) -> PresetFileStore {
-            PresetFileStore::new(self.0.join("data").join(PRESETS_FILE_NAME))
+        fn store(&self) -> JsonFileStore {
+            JsonFileStore::new(self.0.join("data").join(PRESETS_FILE_NAME))
         }
 
         fn files(&self) -> Vec<String> {
@@ -239,6 +270,21 @@ mod tests {
         assert_eq!(fs::read_to_string(&first).unwrap(), "{ corrupted");
         assert_eq!(fs::read_to_string(&second).unwrap(), "{ corrupted again");
         assert_eq!(store.read().unwrap(), None);
+        let name = first.file_name().unwrap().to_string_lossy().into_owned();
+        assert!(name.starts_with("presets.invalid-"), "backup named after the file: {name}");
+    }
+
+    #[test]
+    fn each_data_file_is_stored_separately() {
+        let dir = TempDir::new("data-files");
+        let files = DataFiles::new(&dir.0);
+        files.get(DataFile::Presets).write(VALID).unwrap();
+        files.get(DataFile::Sessions).write(r#"{ "schemaVersion": 1, "sessions": [] }"#).unwrap();
+
+        assert_eq!(files.get(DataFile::Presets).read().unwrap().as_deref(), Some(VALID));
+        assert_eq!(files.get(DataFile::Sessions).path(), dir.0.join(SESSIONS_FILE_NAME));
+        let backup = files.get(DataFile::Sessions).backup().unwrap();
+        assert!(backup.file_name().unwrap().to_string_lossy().starts_with("sessions.invalid-"));
     }
 
     #[test]

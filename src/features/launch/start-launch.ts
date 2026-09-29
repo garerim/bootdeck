@@ -14,6 +14,8 @@ interface LaunchRequest {
   presetId: string;
   /** Absent : tout le preset. */
   itemId?: string;
+  /** Valeurs proposées (« Launch again » depuis l'historique). */
+  suggestedValues?: Readonly<Record<string, string>>;
 }
 
 interface LaunchRequestState {
@@ -40,9 +42,13 @@ export function itemsToLaunch(preset: Preset, itemId?: string) {
     : preset.items.filter((item) => item.id === itemId);
 }
 
-export function startLaunch(preset: Preset, itemId?: string): void {
+export function startLaunch(
+  preset: Preset,
+  itemId?: string,
+  suggestedValues?: Readonly<Record<string, string>>,
+): void {
   if (variablesUsedBy(itemsToLaunch(preset, itemId)).length > 0) {
-    useLaunchRequestStore.getState().open({ presetId: preset.id, itemId });
+    useLaunchRequestStore.getState().open({ presetId: preset.id, itemId, suggestedValues });
     return;
   }
   const launch = launchStore.getState();

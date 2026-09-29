@@ -1,15 +1,18 @@
 import { CircleAlert, Info, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePresetsStore } from "@/stores/presets-store";
+import { useSessionsStore } from "@/stores/sessions-store";
 
-/** Bandeaux globaux liés à la persistance : échec d'enregistrement, information ponctuelle. */
+/** Bandeaux globaux liés aux données : échec d'enregistrement, informations ponctuelles. */
 export function StorageBanners() {
   const saveError = usePresetsStore((state) => state.saveError);
-  const notice = usePresetsStore((state) => state.notice);
+  const presetsNotice = usePresetsStore((state) => state.notice);
   const retrySave = usePresetsStore((state) => state.retrySave);
-  const dismissNotice = usePresetsStore((state) => state.dismissNotice);
+  const dismissPresetsNotice = usePresetsStore((state) => state.dismissNotice);
+  const sessionsNotice = useSessionsStore((state) => state.notice);
+  const dismissSessionsNotice = useSessionsStore((state) => state.dismissNotice);
 
-  if (!saveError && !notice) return null;
+  if (!saveError && !presetsNotice && !sessionsNotice) return null;
 
   return (
     <div className="flex shrink-0 flex-col">
@@ -27,15 +30,20 @@ export function StorageBanners() {
           </Button>
         </div>
       )}
-      {notice && (
-        <div role="status" className="flex items-center gap-3 border-b bg-muted/60 px-6 py-2 text-sm">
-          <Info className="size-4 shrink-0 text-muted-foreground" />
-          <p className="min-w-0 flex-1 break-all">{notice}</p>
-          <Button variant="ghost" size="icon-sm" aria-label="Dismiss" onClick={dismissNotice}>
-            <X />
-          </Button>
-        </div>
-      )}
+      {presetsNotice && <NoticeBanner message={presetsNotice} onDismiss={dismissPresetsNotice} />}
+      {sessionsNotice && <NoticeBanner message={sessionsNotice} onDismiss={dismissSessionsNotice} />}
+    </div>
+  );
+}
+
+function NoticeBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div role="status" className="flex items-center gap-3 border-b bg-muted/60 px-6 py-2 text-sm">
+      <Info className="size-4 shrink-0 text-muted-foreground" />
+      <p className="min-w-0 flex-1 break-all">{message}</p>
+      <Button variant="ghost" size="icon-sm" aria-label="Dismiss" onClick={onDismiss}>
+        <X />
+      </Button>
     </div>
   );
 }

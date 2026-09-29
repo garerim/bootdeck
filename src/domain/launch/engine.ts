@@ -3,7 +3,7 @@ import { buildLaunchReport, planLaunch, type LaunchReport } from "@/domain/launc
 import { runItem } from "@/domain/launch/run-item";
 import type { SystemAdapter } from "@/domain/launch/system-adapter";
 import { SYSTEM_CALL_TIMEOUT_MS, withTimeouts } from "@/domain/launch/timeout";
-import type { Preset } from "@/domain/preset/schema";
+import type { Preset, PresetItem } from "@/domain/preset/schema";
 import { createVariableResolver } from "@/domain/variables/variables";
 import { errorMessage } from "@/lib/errors";
 
@@ -23,6 +23,17 @@ export interface LaunchRun {
   items: Record<string, ItemRun>;
   /** Valeurs des variables utilisées (affichage des valeurs résolues, historique). */
   values: Record<string, string>;
+  /** Présent pour un lancement complet : ce qui a été lancé, tel quel (enregistré comme session). */
+  session?: LaunchedPreset;
+}
+
+/** Instantané d'un lancement complet : ne change plus, même si le preset est modifié ensuite. */
+export interface LaunchedPreset {
+  id: string;
+  presetName: string;
+  presetIcon?: string;
+  /** Items tels que lancés (variables remplacées), dans l'ordre. */
+  items: PresetItem[];
 }
 
 export type LaunchRuns = Readonly<Record<string, LaunchRun>>;
@@ -48,11 +59,12 @@ export interface LaunchEngine {
 
 export interface EngineOptions {
   now?: () => Date;
+  newId?: () => string;
   timeoutMs?: number;
 }
 
 export function createLaunchEngine(system: SystemAdapter, options: EngineOptions = {}): LaunchEngine {
-  const { now = () => new Date(), timeoutMs = SYSTEM_CALL_TIMEOUT_MS } = options;
+  const { now = () => new Date(), newId = () => crypto.randomUUID(), timeoutMs = SYSTEM_CALL_TIMEOUT_MS } = options;
   const timedSystem = withTimeouts(system, timeoutMs);
   const listeners = new Set<(runs: LaunchRuns) => void>();
   // État immuable : chaque changement produit de nouveaux objets, ce qui permet
@@ -104,6 +116,12 @@ export function createLaunchEngine(system: SystemAdapter, options: EngineOptions
           inProgress: true,
           items: Object.fromEntries(steps.map((step) => [step.item.id, step.initial])),
           values,
+          session: {
+            id: newId(),
+            presetName: preset.name,
+            presetIcon: preset.icon,
+            items: steps.map((step) => step.item),
+          },
         },
       });
 

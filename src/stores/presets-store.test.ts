@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { demoPresets } from "@/domain/preset/fixtures";
 import type { Preset } from "@/domain/preset/schema";
 import { parsePresetsFile, serializePresetsFile } from "@/domain/preset/serialization";
-import type { PresetStorage } from "@/domain/preset/storage";
-import { createMemoryPresetStorage } from "@/platform/mock/memory-preset-storage";
+import type { FileStorage } from "@/domain/storage/file-storage";
+import { createMemoryFileStorage } from "@/platform/mock/memory-file-storage";
 import { createPresetsStore } from "@/stores/presets-store";
 
 function demoPreset(index = 0): Preset {
@@ -14,9 +14,9 @@ function demoPreset(index = 0): Preset {
 
 /** Stockage en mémoire qui garde la trace de ce qui a été écrit. */
 function spyStorage(initialContent: string | null) {
-  const memory = createMemoryPresetStorage(initialContent);
+  const memory = createMemoryFileStorage(initialContent);
   const written: string[] = [];
-  const storage: PresetStorage = {
+  const storage: FileStorage = {
     ...memory,
     write: async (content) => {
       written.push(content);
@@ -85,7 +85,7 @@ describe("presets store — sauvegarde", () => {
   it("écrit dans l'ordre des modifications, même si une écriture est lente", async () => {
     const { storage, written } = spyStorage(serializePresetsFile(demoPresets));
     let first = true;
-    const slowFirstWrite: PresetStorage = {
+    const slowFirstWrite: FileStorage = {
       ...storage,
       write: async (content) => {
         if (first) {
@@ -111,7 +111,7 @@ describe("presets store — sauvegarde", () => {
   it("signale un échec d'écriture, puis l'efface quand une sauvegarde réussit", async () => {
     const { storage } = spyStorage(serializePresetsFile(demoPresets));
     let failing = true;
-    const flaky: PresetStorage = {
+    const flaky: FileStorage = {
       ...storage,
       write: (content) => (failing ? Promise.reject(new Error("Disk full")) : storage.write(content)),
     };
@@ -143,7 +143,7 @@ describe("presets store — sauvegarde de secours", () => {
   });
 
   it("reste en erreur si la mise de côté échoue", async () => {
-    const memory = createMemoryPresetStorage("{ corrupted");
+    const memory = createMemoryFileStorage("{ corrupted");
     const store = createPresetsStore({ ...memory, backup: () => Promise.reject(new Error("Access denied")) });
     await store.getState().initialize();
 

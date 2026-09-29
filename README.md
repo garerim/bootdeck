@@ -35,6 +35,11 @@ Les presets sont stockés dans un seul fichier JSON versionné, lisible et modif
 Le chemin exact est affiché dans **Settings**. Si le fichier devient illisible, l'application ne le modifie
 pas : elle propose de le renommer en `presets.invalid-<horodatage>.json` et de repartir d'une liste vide.
 
+L'historique des lancements (écran **Recent**) est dans `sessions.json`, dans le même dossier : les 200
+derniers lancements, avec les valeurs utilisées et le résultat de chaque item. Il est séparé des presets :
+s'il devient illisible, il est mis de côté (`sessions.invalid-<horodatage>.json`) et repart de zéro
+automatiquement, sans jamais toucher aux presets.
+
 Dans un navigateur (`npm run dev:web`), les presets de démonstration sont gardés en mémoire uniquement.
 
 ## Variables

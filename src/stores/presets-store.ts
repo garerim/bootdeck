@@ -2,14 +2,10 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { duplicatePreset } from "@/domain/preset/operations";
 import type { Preset } from "@/domain/preset/schema";
-import {
-  loadPresets,
-  savePresets,
-  type PresetStorage,
-  type PresetsLoadError,
-} from "@/domain/preset/storage";
+import { loadPresets, savePresets, type PresetsLoadError } from "@/domain/preset/storage";
+import type { FileStorage } from "@/domain/storage/file-storage";
 import { errorMessage } from "@/lib/errors";
-import { createPresetStorage } from "@/platform/preset-storage";
+import { createPresetStorage } from "@/platform/data-storage";
 
 export type LoadState =
   | { status: "loading" }
@@ -46,7 +42,7 @@ export interface PresetsState {
  * Fabrique plutôt que singleton : l'app lui passe le vrai stockage, les tests
  * un stockage en mémoire.
  */
-export function createPresetsStore(storage: PresetStorage) {
+export function createPresetsStore(storage: FileStorage) {
   // Écritures enchaînées : chacune attend la précédente, donc la dernière
   // modification demandée est toujours la dernière écrite sur le disque.
   let writes: Promise<void> = Promise.resolve();

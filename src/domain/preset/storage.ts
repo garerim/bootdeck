@@ -4,20 +4,8 @@ import {
   serializePresetsFile,
   type PresetsFileError,
 } from "@/domain/preset/serialization";
+import type { FileStorage } from "@/domain/storage/file-storage";
 import { errorMessage } from "@/lib/errors";
-
-/**
- * Port de stockage : ce dont le domaine a besoin, sans savoir comment c'est fait.
- * Implémentations : Tauri (fichier sur disque, via Rust) et mémoire (navigateur, tests).
- */
-export interface PresetStorage {
-  /** Lit le fichier. `content` vaut `null` s'il n'existe pas encore. */
-  read(): Promise<{ path: string; content: string | null }>;
-  /** Remplace le contenu du fichier. */
-  write(content: string): Promise<void>;
-  /** Met le fichier actuel de côté et renvoie le chemin de la copie. */
-  backup(): Promise<string>;
-}
 
 export type PresetsLoadError = PresetsFileError | { kind: "read-failed"; message: string };
 
@@ -25,8 +13,8 @@ export type LoadPresetsResult =
   | { ok: true; path: string; presets: Preset[] }
   | { ok: false; path: string | null; error: PresetsLoadError };
 
-export async function loadPresets(storage: PresetStorage): Promise<LoadPresetsResult> {
-  let file: Awaited<ReturnType<PresetStorage["read"]>>;
+export async function loadPresets(storage: FileStorage): Promise<LoadPresetsResult> {
+  let file: Awaited<ReturnType<FileStorage["read"]>>;
   try {
     file = await storage.read();
   } catch (error) {
@@ -42,6 +30,6 @@ export async function loadPresets(storage: PresetStorage): Promise<LoadPresetsRe
     : { ok: false, path: file.path, error: parsed.error };
 }
 
-export function savePresets(storage: PresetStorage, presets: readonly Preset[]): Promise<void> {
+export function savePresets(storage: FileStorage, presets: readonly Preset[]): Promise<void> {
   return storage.write(serializePresetsFile(presets));
 }

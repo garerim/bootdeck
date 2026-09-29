@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-load-data-file"
+description = "Enables the load_data_file command without any pre-configured scope."
+commands.allow = ["load_data_file"]
+
+[[permission]]
+identifier = "deny-load-data-file"
+description = "Denies the load_data_file command without any pre-configured scope."
+commands.deny = ["load_data_file"]

@@ -86,7 +86,8 @@ export function applyItemRunEvent(run: ItemRun, event: ItemRunEvent): ItemRun {
 
 export type RunSummary = Record<ItemRunStatus, number> & { total: number };
 
-export function summarizeItemRuns(runs: readonly ItemRun[]): RunSummary {
+/** Accepte tout ce qui a un statut : états en cours (ItemRun) ou items de session. */
+export function summarizeItemRuns(runs: readonly Pick<ItemRun, "status">[]): RunSummary {
   const summary: RunSummary = {
     total: runs.length,
     pending: 0,

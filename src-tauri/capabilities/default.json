@@ -5,9 +5,9 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "allow-load-presets",
-    "allow-save-presets",
-    "allow-backup-presets-file",
+    "allow-load-data-file",
+    "allow-save-data-file",
+    "allow-backup-data-file",
     "allow-open-url",
     "allow-open-folder",
     "allow-launch-application",

@@ -149,6 +149,32 @@ export function resolveValues(
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, values };
 }
 
+/**
+ * Valeurs proposées dans la boîte de lancement, par ordre de priorité :
+ * 1. ce qui a été saisi depuis l'ouverture de l'app (`typed`) ;
+ * 2. les valeurs d'un lancement précédent (`previous`), sauf pour une variable
+ *    dont la valeur par défaut dépend d'autres variables (`~/Projects/{project}`) :
+ *    elle garde son modèle, pour suivre les autres valeurs ;
+ * 3. la valeur par défaut.
+ */
+export function prefillInputs(
+  definitions: readonly VariableDefinition[],
+  typed: Readonly<Record<string, string>> | undefined,
+  previous: Readonly<Record<string, string>> | undefined,
+): Record<string, string> {
+  return Object.fromEntries(
+    definitions.map((definition) => {
+      const key = definition.key;
+      const typedValue = typed?.[key];
+      if (typedValue !== undefined) return [key, typedValue];
+      const dependsOnOthers = templateVariables(definition.defaultValue ?? "").length > 0;
+      const previousValue = previous?.[key];
+      if (!dependsOnOthers && previousValue !== undefined) return [key, previousValue];
+      return [key, definition.defaultValue ?? ""];
+    }),
+  );
+}
+
 // ─── Utilisation dans les items ────────────────────────────────────────────────
 
 /** Variables utilisées par ces items, sans doublon. */

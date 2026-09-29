@@ -3,9 +3,9 @@ fn main() {
     // capability doit accorder explicitement : sans ça, Tauri autorise toutes les
     // commandes de l'app à toutes les fenêtres.
     let manifest = tauri_build::AppManifest::new().commands(&[
-        "load_presets",
-        "save_presets",
-        "backup_presets_file",
+        "load_data_file",
+        "save_data_file",
+        "backup_data_file",
         "open_url",
         "open_folder",
         "launch_application",
