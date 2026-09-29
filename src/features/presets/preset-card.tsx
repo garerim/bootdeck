@@ -8,9 +8,11 @@ import { formatItemSummary } from "@/features/presets/item-types";
 interface PresetCardProps {
   preset: Preset;
   onOpen: () => void;
+  onLaunch: () => void;
 }
 
-export function PresetCard({ preset, onOpen }: PresetCardProps) {
+export function PresetCard({ preset, onOpen, onLaunch }: PresetCardProps) {
+  const hasEnabledItems = preset.items.some((item) => item.enabled);
   return (
     <article className="group relative flex flex-col gap-4 rounded-xl border bg-card p-4 text-card-foreground transition-colors hover:border-foreground/15 hover:bg-accent/40">
       <div className="flex items-start gap-3">
@@ -35,8 +37,15 @@ export function PresetCard({ preset, onOpen }: PresetCardProps) {
         <p className="truncate text-xs text-muted-foreground">
           {formatItemSummary(countItemsByType(preset.items))}
         </p>
-        {/* Lancement branché en Phase 6 */}
-        <Button size="sm" variant="outline" disabled className="relative z-10" title="Not available yet">
+        {/* relative z-10 : au-dessus du bouton étendu qui couvre la carte */}
+        <Button
+          size="sm"
+          variant="outline"
+          className="relative z-10"
+          disabled={!hasEnabledItems}
+          title={hasEnabledItems ? undefined : "All items are disabled"}
+          onClick={onLaunch}
+        >
           <Play data-icon="inline-start" />
           Launch
         </Button>

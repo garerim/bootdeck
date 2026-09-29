@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Copy, Ellipsis, Pencil, Play, SearchX, Trash2 } from "lucide-react";
+import { Copy, Ellipsis, LoaderCircle, Pencil, Play, SearchX, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { Page, PageHeader } from "@/components/layout/page";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,26 +10,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { summarizeItemRuns, type ItemRun } from "@/domain/launch/item-run";
 import { countItemsByType } from "@/domain/preset/operations";
-import type { PresetItem } from "@/domain/preset/schema";
+import { describeRunSummary } from "@/features/launch/format";
 import { DeletePresetDialog } from "@/features/presets/delete-preset-dialog";
-import { ItemTypeIcon, PresetIcon } from "@/features/presets/icons";
-import {
-  ITEM_TYPE_META,
-  formatItemSummary,
-  itemTarget,
-  itemWorkingDirectory,
-} from "@/features/presets/item-types";
-import { cn } from "@/lib/utils";
+import { PresetIcon } from "@/features/presets/icons";
+import { formatItemSummary } from "@/features/presets/item-types";
+import { PresetItemRow } from "@/features/presets/preset-item-row";
+import { useLaunchStore } from "@/stores/launch-store";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
 
 const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
+const timeFormat = new Intl.DateTimeFormat("en", { timeStyle: "short" });
 
 export function PresetDetailPage({ presetId }: { presetId: string }) {
   const preset = usePresetsStore((state) => state.presets.find((candidate) => candidate.id === presetId));
   const removePreset = usePresetsStore((state) => state.remove);
   const duplicatePreset = usePresetsStore((state) => state.duplicate);
+  const run = useLaunchStore((state) => state.runs[presetId]);
+  const launchPreset = useLaunchStore((state) => state.launchPreset);
+  const launchItem = useLaunchStore((state) => state.launchItem);
+  const stopItem = useLaunchStore((state) => state.stopItem);
+  const stopAllItems = useLaunchStore((state) => state.stopAllItems);
+  const clearRun = useLaunchStore((state) => state.clearRun);
   const navigate = useNavigationStore((state) => state.navigate);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -50,13 +53,21 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
   }
 
   const disabledCount = preset.items.filter((item) => !item.enabled).length;
+  const hasEnabledItems = preset.items.length > disabledCount;
+  const launching = run?.inProgress ?? false;
+  // Seuls les items encore présents dans le preset comptent (un item a pu être supprimé depuis).
+  const itemRuns = preset.items
+    .map((item) => run?.items[item.id])
+    .filter((itemRun): itemRun is ItemRun => itemRun !== undefined);
+  const hasRunningItems = itemRuns.some((itemRun) => itemRun.status === "running");
 
   function handleDuplicate() {
     const copy = duplicatePreset(presetId);
     if (copy) navigate({ name: "preset-detail", presetId: copy.id });
   }
 
-  function handleDelete() {
+  async function handleDelete() {
+    await stopAllItems(presetId);
     removePreset(presetId);
     navigate({ name: "presets" });
   }
@@ -95,10 +106,17 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {/* Lancement branché en Phase 6 */}
-              <Button disabled title="Not available yet">
-                <Play data-icon="inline-start" />
-                Launch
+              <Button
+                disabled={launching || !hasEnabledItems}
+                title={hasEnabledItems ? undefined : "All items are disabled"}
+                onClick={() => void launchPreset(preset)}
+              >
+                {launching ? (
+                  <LoaderCircle data-icon="inline-start" className="animate-spin" />
+                ) : (
+                  <Play data-icon="inline-start" />
+                )}
+                {launching ? "Launching…" : "Launch"}
               </Button>
             </>
           }
@@ -110,10 +128,31 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
           <h2 id="launch-order-title" className="text-sm font-semibold">
             Launch order
           </h2>
-          <p className="text-xs text-muted-foreground">
-            {formatItemSummary(countItemsByType(preset.items))}
-            {disabledCount > 0 && ` · ${disabledCount} disabled`}
-          </p>
+          {run ? (
+            <div className="flex items-baseline gap-2 text-xs">
+              <p role="status" aria-live="polite" className="font-medium">
+                {describeRunSummary(summarizeItemRuns(itemRuns), launching)}
+                <span className="font-normal text-muted-foreground">
+                  {" "}
+                  · started {timeFormat.format(new Date(run.startedAt))}
+                </span>
+              </p>
+              {!launching && !hasRunningItems && (
+                <button
+                  type="button"
+                  onClick={() => clearRun(presetId)}
+                  className="text-muted-foreground underline-offset-2 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {formatItemSummary(countItemsByType(preset.items))}
+              {disabledCount > 0 && ` · ${disabledCount} disabled`}
+            </p>
+          )}
         </div>
 
         {preset.items.length === 0 ? (
@@ -130,7 +169,15 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
         ) : (
           <ol className="divide-y rounded-xl border bg-card">
             {preset.items.map((item, index) => (
-              <PresetItemRow key={item.id} item={item} position={index + 1} />
+              <PresetItemRow
+                key={item.id}
+                item={item}
+                position={index + 1}
+                run={run?.items[item.id]}
+                canRun={!launching}
+                onRun={() => void launchItem(preset, item.id)}
+                onStop={() => void stopItem(presetId, item.id)}
+              />
             ))}
           </ol>
         )}
@@ -145,32 +192,8 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
         preset={preset}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        onConfirm={handleDelete}
+        onConfirm={() => void handleDelete()}
       />
     </Page>
-  );
-}
-
-function PresetItemRow({ item, position }: { item: PresetItem; position: number }) {
-  const target = itemTarget(item);
-  const workingDirectory = itemWorkingDirectory(item);
-
-  return (
-    <li className="flex items-center gap-3 px-4 py-3">
-      <span className="w-4 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{position}</span>
-      <ItemTypeIcon type={item.type} className={cn(!item.enabled && "opacity-50")} />
-      <div className={cn("min-w-0 flex-1", !item.enabled && "opacity-60")}>
-        <p className="truncate text-sm font-medium">{item.name}</p>
-        <p className="truncate font-mono text-xs text-muted-foreground" title={target}>
-          {target}
-          {workingDirectory && <span className="text-muted-foreground/70"> · in {workingDirectory}</span>}
-        </p>
-      </div>
-      {item.enabled ? (
-        <Badge variant="secondary">{ITEM_TYPE_META[item.type].label}</Badge>
-      ) : (
-        <Badge variant="outline">Disabled</Badge>
-      )}
-    </li>
   );
 }

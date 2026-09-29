@@ -37,6 +37,12 @@ export default defineConfig(() => ({
     },
   },
 
+  build: {
+    // Le seuil par défaut (500 ko) vise les sites web téléchargés par le réseau. Dans
+    // l'app desktop, le bundle est lu sur le disque local : le découper n'apporterait rien.
+    chunkSizeWarningLimit: 1024,
+  },
+
   test: {
     // Logique pure (domain/) : pas besoin de DOM pour l'instant.
     environment: "node",
