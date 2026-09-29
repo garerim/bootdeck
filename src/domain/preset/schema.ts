@@ -19,6 +19,8 @@ import {
 /** Garde-fou : un preset qui ouvrirait 500 onglets est presque sûrement une erreur. */
 export const MAX_ITEMS_PER_PRESET = 50;
 
+export const PRESET_NAME_MAX_LENGTH = 60;
+
 const itemBase = {
   id: z.uuid(),
   name: displayName(80),
@@ -78,7 +80,7 @@ export const PRESET_ITEM_TYPES = PresetItemSchema.options.map((option) => option
 export const PresetSchema = z
   .object({
     id: z.uuid(),
-    name: displayName(60),
+    name: displayName(PRESET_NAME_MAX_LENGTH),
     description: z.string().trim().max(200, "Description must be at most 200 characters").optional(),
     icon: z.string().trim().min(1).max(16, "Icon must be a single emoji").optional(),
     // L'ordre du tableau est l'ordre d'exécution (pas de champ `order` séparé).

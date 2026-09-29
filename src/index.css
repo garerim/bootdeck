@@ -117,6 +117,15 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Barres de défilement et contrôles natifs de la WebView assortis au thème */
+:root {
+    color-scheme: light;
+}
+
+.dark {
+    color-scheme: dark;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
