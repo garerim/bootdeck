@@ -22,6 +22,21 @@ Stack : Tauri 2 (Rust) · React 19 · TypeScript · Vite · Tailwind CSS 4 · sh
 | `npm run typecheck`   | Vérifie les types TypeScript                                      |
 | `npm test`            | Lance les tests Vitest une fois (`npm run test:watch` en continu) |
 
+## Données
+
+Les presets sont stockés dans un seul fichier JSON versionné, lisible et modifiable à la main :
+
+| OS      | Emplacement                                                     |
+| ------- | --------------------------------------------------------------- |
+| Windows | `%APPDATA%\dev.workspacepresets.desktop\presets.json`           |
+| macOS   | `~/Library/Application Support/dev.workspacepresets.desktop/…`  |
+| Linux   | `~/.local/share/dev.workspacepresets.desktop/…`                 |
+
+Le chemin exact est affiché dans **Settings**. Si le fichier devient illisible, l'application ne le modifie
+pas : elle propose de le renommer en `presets.invalid-<horodatage>.json` et de repartir d'une liste vide.
+
+Dans un navigateur (`npm run dev:web`), les presets de démonstration sont gardés en mémoire uniquement.
+
 ## Organisation
 
 ```text
