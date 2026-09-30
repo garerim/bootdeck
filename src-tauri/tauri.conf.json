@@ -28,7 +28,17 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
+    "publisher": "Workspace Presets",
+    "category": "DeveloperTool",
+    "shortDescription": "Launch complete work environments in one click",
+    "longDescription": "Workspace Presets opens your editor, terminal, web pages, folders and commands together, in the right order, with one click. Everything stays on your computer.",
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

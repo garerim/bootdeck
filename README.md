@@ -17,7 +17,7 @@ Stack : Tauri 2 (Rust) · React 19 · TypeScript · Vite · Tailwind CSS 4 · sh
 | --------------------- | ----------------------------------------------------------------- |
 | `npm run dev`         | Lance l'application desktop (Vite + Tauri, rechargement à chaud)  |
 | `npm run dev:web`     | Lance uniquement le front dans un navigateur (sans Tauri)         |
-| `npm run build`       | Construit l'application et ses installeurs                        |
+| `npm run build`       | Construit l'installeur Windows (voir [docs/packaging.md](docs/packaging.md)) |
 | `npm run build:web`   | Vérifie les types et construit uniquement le front (`dist/`)      |
 | `npm run typecheck`   | Vérifie les types TypeScript                                      |
 | `npm test`            | Lance les tests Vitest une fois (`npm run test:watch` en continu) |
