@@ -40,3 +40,7 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = "2"
+
+[dev-dependencies]
+# Runtime simulé de Tauri pour les tests d'IPC (src/ipc_tests.rs) ; absent des builds de l'app.
+tauri = { version = "2", features = ["test"] }

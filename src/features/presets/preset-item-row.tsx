@@ -115,7 +115,7 @@ export function PresetItemRow({ item, position, run, values, canRun, onRun, onSt
       {/* Aligné sur la colonne du nom : numéro (1rem) + icône (2rem) + 2 espacements (1.5rem) */}
       {showOutput && run && (
         <div className="mt-3 pl-18">
-          <CommandOutput lines={run.output} label={`Output of ${item.name}`} />
+          <CommandOutput lines={run.output} label={`Output of ${item.name}`} running={isRunning} />
         </div>
       )}
     </li>

@@ -10,9 +10,11 @@
     "tauri": "tauri",
     "dev:web": "vite",
     "build:web": "tsc && vite build",
-    "typecheck": "tsc",
+    "typecheck": "tsc && tsc -p e2e",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test --project=browser",
+    "test:e2e:desktop": "node e2e/desktop/build-app.mjs && playwright test --project=desktop"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
@@ -30,6 +32,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tauri-apps/cli": "^2",
     "@types/node": "^24.19.0",

@@ -47,6 +47,12 @@ describe("applyItemRunEvent", () => {
     expect(play(...base, { type: "exited", code: 127 }).error).toMatch(/^Command not found \(exit code 127\)/);
   });
 
+  it("ne tient compte que du code de sortie : une commande sans aucune sortie réussit", () => {
+    const run = play({ type: "started" }, { type: "process-started", processId: 7 }, { type: "exited", code: 0 });
+    expect(run).toMatchObject({ status: "success", output: [] });
+    expect(run.error).toBeUndefined();
+  });
+
   it("gère une commande si courte que sa fin arrive avant son identifiant", () => {
     const run = play({ type: "started" }, { type: "exited", code: 0 }, { type: "process-started", processId: 7 });
     expect(run).toMatchObject({ status: "success", processId: 7 });

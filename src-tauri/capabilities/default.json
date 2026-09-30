@@ -1,10 +1,11 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Permissions de la fenêtre principale. Aucun plugin n'est exposé au JavaScript : le front ne peut appeler que les commandes de l'app listées ici.",
+  "description": "Permissions de la fenêtre principale. Aucun plugin n'est exposé au JavaScript : le front ne peut appeler que les commandes de l'app listées ici, et fermer sa propre fenêtre (allow-destroy) après confirmation de l'abandon de modifications.",
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-destroy",
     "allow-load-data-file",
     "allow-save-data-file",
     "allow-backup-data-file",

@@ -21,6 +21,8 @@ Stack : Tauri 2 (Rust) · React 19 · TypeScript · Vite · Tailwind CSS 4 · sh
 | `npm run build:web`   | Vérifie les types et construit uniquement le front (`dist/`)      |
 | `npm run typecheck`   | Vérifie les types TypeScript                                      |
 | `npm test`            | Lance les tests Vitest une fois (`npm run test:watch` en continu) |
+| `npm run test:e2e`    | Tests de bout en bout dans le navigateur (système simulé)         |
+| `npm run test:e2e:desktop` | Tests de bout en bout sur l'application réelle (Windows)     |
 
 ## Données
 
@@ -75,6 +77,23 @@ Une seule instance de l'application tourne à la fois : la relancer ramène la f
 Dans l'application compilée, les raccourcis du navigateur intégré (F5, Ctrl+R, Ctrl+P, Ctrl+F) et son menu
 contextuel sont désactivés, sauf dans les champs de saisie.
 
+## Tests
+
+| Niveau | Outil | Ce qui est vérifié |
+| ------ | ----- | ------------------ |
+| Unitaires (TS) | Vitest, `src/**/*.test.ts` | Validation des presets, variables, étapes du lancement (ordre, validation, plan, rapport), moteur, stores |
+| Unitaires (Rust) | `cargo test` dans `src-tauri` | Stockage atomique, validation des entrées, processus (sortie, arrêt de l'arbre, Job Object), messages d'erreur |
+| Intégration front ↔ Rust | Vitest + `cargo test --test ipc` | Le contrat `contracts/ipc.json` : le front envoie exactement ces appels, Rust les rejoue dans le vrai pipeline IPC de Tauri (arguments, permissions, erreurs, événements) |
+| Bout en bout | Playwright | Créer un preset, ajouter une URL et un dossier, enregistrer, lancer, voir le succès |
+
+Le parcours de bout en bout tourne de deux façons :
+
+- `npm run test:e2e` : l'interface dans Edge, avec le système simulé. Rapide, sans effet de bord.
+- `npm run test:e2e:desktop` (Windows) : compile une variante de l'app (identifiant `dev.workspacepresets.e2e`,
+  données et instance séparées : l'app habituelle peut rester ouverte), puis la pilote à travers sa WebView2.
+  Le lancement est réel : un onglet s'ouvre dans le navigateur par défaut (il reste ouvert) et une fenêtre de
+  l'Explorateur (refermée par le test). La première compilation prend quelques minutes.
+
 ## Organisation
 
 ```text
@@ -86,10 +105,13 @@ src/
   platform/     seul dossier autorisé à importer @tauri-apps/*
   stores/       état global (Zustand)
   hooks/  lib/
+contracts/      contrat IPC partagé entre le front et Rust (tests d'intégration)
+e2e/            tests de bout en bout (Playwright)
 src-tauri/src/
   commands/     commandes exposées au front (fines)
   services/     logique applicative
   system/       code spécifique à chaque OS
   models/       structures échangées avec le front
   errors.rs     type d'erreur de l'application
+src-tauri/tests/  tests d'intégration de l'IPC (runtime Tauri simulé)
 ```

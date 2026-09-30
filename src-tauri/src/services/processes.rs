@@ -221,6 +221,19 @@ mod tests {
     }
 
     #[test]
+    fn a_silent_command_succeeds_only_its_exit_code_matters() {
+        let harness = Harness::new();
+        // Aucune sortie (redirigée vers nul) : ce n'est pas une erreur.
+        harness.run(if cfg!(windows) { "ping -n 2 127.0.0.1 >nul" } else { "sleep 1" });
+        assert_eq!(harness.wait_for_exit(), vec![exited(0)]);
+
+        // Même silence, mais un code de sortie non nul : c'est lui qui fait l'échec.
+        let failing = Harness::new();
+        failing.run(if cfg!(windows) { "ping -n 2 127.0.0.1 >nul && exit 1" } else { "sleep 1 && exit 1" });
+        assert_eq!(failing.wait_for_exit(), vec![exited(1)]);
+    }
+
+    #[test]
     fn separates_stderr_from_stdout() {
         let harness = Harness::new();
         // Redirection en tête : avec `echo oops 1>&2`, cmd afficherait aussi l'espace avant `1>&2`.

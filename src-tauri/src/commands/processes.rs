@@ -1,7 +1,7 @@
 //! Commandes des processus gérés.
 
 use tauri::ipc::Channel;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Runtime, State};
 
 use crate::commands::launcher::home_dir;
 use crate::errors::AppError;
@@ -14,8 +14,8 @@ use crate::system;
 /// La sortie et le code de fin arrivent ensuite par `on_event` (un `Channel` Tauri,
 /// propre à cet appel et qui préserve l'ordre des messages).
 #[tauri::command]
-pub async fn execute_command(
-    app: AppHandle,
+pub async fn execute_command<R: Runtime>(
+    app: AppHandle<R>,
     registry: State<'_, ProcessRegistry>,
     request: ExecuteCommandRequest,
     on_event: Channel<ProcessEvent>,

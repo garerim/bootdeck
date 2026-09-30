@@ -28,3 +28,8 @@ dist-ssr
 
 # Local Claude Code configuration
 .claude/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

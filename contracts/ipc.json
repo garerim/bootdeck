@@ -1,0 +1,85 @@
+{
+  "$comment": "Contrat IPC entre le front (src/platform/tauri) et Rust (src-tauri/src/commands). Chaque appel est vérifié des deux côtés : le front doit envoyer exactement `args` (src/platform/tauri/ipc-contract.test.ts), Rust doit les accepter et répondre `response` (src-tauri/src/ipc_tests.rs). Valeurs spéciales : \"<string>\" et \"<number>\" = n'importe quelle valeur de ce type, \"<channel>\" = un Channel Tauri. `replay: false` : non rejoué côté Rust (ouvrirait une boîte de dialogue native).",
+  "calls": [
+    {
+      "name": "open_url refuses a URL that is not a web page",
+      "command": "open_url",
+      "args": { "url": "ftp://example.com/file" },
+      "response": { "error": "invalid-input" }
+    },
+    {
+      "name": "open_folder reports a missing folder",
+      "command": "open_folder",
+      "args": { "path": "~/workspace-presets-contract/missing" },
+      "response": { "error": "not-found" }
+    },
+    {
+      "name": "launch_application reports a missing program",
+      "command": "launch_application",
+      "args": {
+        "request": { "path": "~/workspace-presets-contract/tool.exe", "args": ["--flag"], "workingDirectory": "~" }
+      },
+      "response": { "error": "not-found" }
+    },
+    {
+      "name": "execute_command starts a command and returns its process id",
+      "command": "execute_command",
+      "args": { "request": { "command": "echo contract", "workingDirectory": "~" }, "onEvent": "<channel>" },
+      "response": { "ok": "<number>" }
+    },
+    {
+      "name": "execute_command reports a missing working directory",
+      "command": "execute_command",
+      "args": {
+        "request": { "command": "echo contract", "workingDirectory": "~/workspace-presets-contract/missing" },
+        "onEvent": "<channel>"
+      },
+      "response": { "error": "not-found" }
+    },
+    {
+      "name": "stop_process accepts a process that has already finished",
+      "command": "stop_process",
+      "args": { "processId": 999999 },
+      "response": { "ok": null }
+    },
+    {
+      "name": "load_data_file returns the path and no content for a new file",
+      "command": "load_data_file",
+      "args": { "file": "presets" },
+      "response": { "ok": { "path": "<string>", "content": null } }
+    },
+    {
+      "name": "save_data_file writes a versioned JSON document",
+      "command": "save_data_file",
+      "args": { "file": "sessions", "content": "{\"schemaVersion\":1,\"sessions\":[]}" },
+      "response": { "ok": null }
+    },
+    {
+      "name": "backup_data_file reports a file that does not exist",
+      "command": "backup_data_file",
+      "args": { "file": "presets" },
+      "response": { "error": "io" }
+    },
+    {
+      "name": "pick_folder opens the native dialog in the given folder",
+      "command": "pick_folder",
+      "args": { "startIn": "~/Projects" },
+      "response": { "ok": "<string>" },
+      "replay": false
+    },
+    {
+      "name": "pick_program returns null when the user cancels",
+      "command": "pick_program",
+      "args": {},
+      "response": { "ok": null },
+      "replay": false
+    }
+  ],
+  "processEvents": [
+    { "type": "stdout", "line": "ready on http://localhost:3000" },
+    { "type": "stderr", "line": "warning: something" },
+    { "type": "exited", "code": 0 },
+    { "type": "exited", "code": 1, "missingProgram": "npx" },
+    { "type": "exited", "code": null }
+  ]
+}

@@ -41,7 +41,12 @@ export function ItemEditor({ item, position, total, errors, autoFocus, onChange,
   );
 
   return (
-    <div className={cn("rounded-xl border bg-card", !item.enabled && "bg-muted/40")}>
+    // Groupe nommé : un lecteur d'écran annonce « Item 2: URL » en entrant dans ses champs.
+    <div
+      role="group"
+      aria-label={`Item ${position}: ${meta.label}`}
+      className={cn("rounded-xl border bg-card", !item.enabled && "bg-muted/40")}
+    >
       <div className="flex items-center gap-2.5 border-b px-3 py-2">
         <span className="w-4 text-right text-xs tabular-nums text-muted-foreground">{position}</span>
         <ItemTypeIcon type={item.type} className="size-7" />

@@ -4,7 +4,7 @@
 //! n'est accordée au JavaScript. Le front ne reçoit que le chemin choisi par
 //! l'utilisateur, ou `null` s'il a annulé.
 
-use tauri::{AppHandle, WebviewWindow, Wry};
+use tauri::{AppHandle, Runtime, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder, FilePath};
 
 use crate::commands::launcher::home_dir;
@@ -13,9 +13,9 @@ use crate::system::paths::start_directory;
 
 /// `start_in` : valeur actuelle du champ, pour ouvrir la boîte au bon endroit.
 #[tauri::command]
-pub async fn pick_folder(
-    app: AppHandle,
-    window: WebviewWindow,
+pub async fn pick_folder<R: Runtime>(
+    app: AppHandle<R>,
+    window: WebviewWindow<R>,
     start_in: Option<String>,
 ) -> Result<Option<String>, AppError> {
     let dialog = dialog_builder(&app, &window, "Select a folder", start_in.as_deref())?;
@@ -24,9 +24,9 @@ pub async fn pick_folder(
 }
 
 #[tauri::command]
-pub async fn pick_program(
-    app: AppHandle,
-    window: WebviewWindow,
+pub async fn pick_program<R: Runtime>(
+    app: AppHandle<R>,
+    window: WebviewWindow<R>,
     start_in: Option<String>,
 ) -> Result<Option<String>, AppError> {
     let dialog = dialog_builder(&app, &window, "Select a program", start_in.as_deref())?;
@@ -37,12 +37,12 @@ pub async fn pick_program(
     selected_path(dialog.blocking_pick_file())
 }
 
-fn dialog_builder(
-    app: &AppHandle,
-    window: &WebviewWindow,
+fn dialog_builder<R: Runtime>(
+    app: &AppHandle<R>,
+    window: &WebviewWindow<R>,
     title: &str,
     start_in: Option<&str>,
-) -> Result<FileDialogBuilder<Wry>, AppError> {
+) -> Result<FileDialogBuilder<R>, AppError> {
     let home = home_dir(app)?;
     Ok(app
         .dialog()

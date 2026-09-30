@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { App } from "@/app/app";
 import { disableBrowserBehaviors } from "@/app/desktop-behaviors";
+import { guardWindowCloseWhileEditing } from "@/app/window-close-guard";
 import { notifyLaunchProblems } from "@/features/launch/launch-notices";
 import { followSystemTheme } from "@/lib/theme";
 import { isDesktop } from "@/platform/runtime";
@@ -18,6 +19,8 @@ void presetsStore.getState().initialize();
 void sessionsStore.getState().initialize();
 // Chaque lancement complet est enregistré dans l'historique.
 recordSessions(launchStore, sessionsStore);
+// Fermer la fenêtre avec des modifications non enregistrées demande confirmation.
+guardWindowCloseWhileEditing();
 // Un échec hors de l'écran affiché (ex. serveur de dev qui s'arrête) est signalé par une notification.
 notifyLaunchProblems(launchStore);
 

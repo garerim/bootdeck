@@ -9,7 +9,17 @@ mod models;
 mod services;
 mod system;
 
-use tauri::{Manager, RunEvent};
+/// Pour les tests d'intégration de l'IPC (`tests/ipc.rs`) uniquement.
+#[doc(hidden)]
+pub mod ipc_test_support {
+    pub use crate::invoke_handler;
+    pub use crate::models::ProcessEvent;
+    pub use crate::services::processes::ProcessRegistry;
+    pub use crate::services::storage::DataFiles;
+}
+
+use tauri::ipc::Invoke;
+use tauri::{Manager, RunEvent, Runtime};
 
 use services::processes::ProcessRegistry;
 use services::storage::DataFiles;
@@ -37,18 +47,7 @@ pub fn run() {
             app.manage(DataFiles::new(&data_directory));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            commands::storage::load_data_file,
-            commands::storage::save_data_file,
-            commands::storage::backup_data_file,
-            commands::launcher::open_url,
-            commands::launcher::open_folder,
-            commands::launcher::launch_application,
-            commands::processes::execute_command,
-            commands::processes::stop_process,
-            commands::dialogs::pick_folder,
-            commands::dialogs::pick_program,
-        ])
+        .invoke_handler(invoke_handler())
         .build(tauri::generate_context!())
         // Échec au démarrage (config invalide, WebView absente) : rien à récupérer, on s'arrête.
         .expect("error while building tauri application")
@@ -59,6 +58,24 @@ pub fn run() {
                 app.state::<ProcessRegistry>().stop_all();
             }
         });
+}
+
+/// Commandes exposées au front. Partagé avec les tests d'IPC (`tests/ipc.rs`), qui
+/// vérifient ainsi exactement ce que l'app enregistre. Chaque commande doit aussi
+/// être déclarée dans `build.rs` et autorisée dans `capabilities/default.json`.
+pub fn invoke_handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool + Send + Sync + 'static {
+    tauri::generate_handler![
+        commands::storage::load_data_file,
+        commands::storage::save_data_file,
+        commands::storage::backup_data_file,
+        commands::launcher::open_url,
+        commands::launcher::open_folder,
+        commands::launcher::launch_application,
+        commands::processes::execute_command,
+        commands::processes::stop_process,
+        commands::dialogs::pick_folder,
+        commands::dialogs::pick_program,
+    ]
 }
 
 #[cfg(desktop)]
