@@ -6,7 +6,7 @@
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Child, Command};
 
 /// Exécute une ligne de commande dans le shell de l'utilisateur.
 /// `-l` (shell de connexion) charge son PATH : une app graphique lancée depuis
@@ -45,14 +45,48 @@ pub fn configure_managed_process(command: &mut Command) {
     command.process_group(0);
 }
 
-/// Envoie SIGTERM à tout le groupe de processus (`-pid` désigne le groupe).
-pub fn kill_process_tree(pid: u32) -> io::Result<()> {
-    let status = Command::new("/bin/kill")
-        .args(["-s", "TERM", "--", &format!("-{pid}")])
-        .status()?;
-    if status.success() {
-        Ok(())
-    } else {
-        Err(io::Error::other(format!("kill failed ({status})")))
+/// Une commande gérée et ses descendants : son groupe de processus.
+///
+/// Contrairement au Job Object de Windows, rien n'arrête le groupe si l'application
+/// plante (il faudrait `prctl(PR_SET_PDEATHSIG)` sous Linux, sans équivalent sous macOS).
+pub struct ProcessTree {
+    pid: u32,
+}
+
+pub fn track_process_tree(child: &Child) -> ProcessTree {
+    ProcessTree { pid: child.id() }
+}
+
+impl ProcessTree {
+    pub fn pid(&self) -> u32 {
+        self.pid
     }
+
+    /// Envoie SIGTERM à tout le groupe de processus (`-pid` désigne le groupe).
+    pub fn kill(&self) -> io::Result<()> {
+        let status = Command::new("/bin/kill")
+            .args(["-s", "TERM", "--", &format!("-{}", self.pid)])
+            .status()?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(io::Error::other(format!("kill failed ({status})")))
+        }
+    }
+
+    /// Rien à libérer : le groupe n'est lié à aucune ressource de l'application.
+    pub fn release(&self) {}
+}
+
+/// Explication lisible des refus de démarrage propres à Unix.
+pub fn describe_start_error(error: &io::Error) -> Option<&'static str> {
+    // ENOEXEC (même valeur sous Linux et macOS) : fichier exécutable d'un format inconnu.
+    const ENOEXEC: i32 = 8;
+    (error.raw_os_error() == Some(ENOEXEC)).then_some("it is not a valid program")
+}
+
+/// Rien à deviner : un shell Unix sort avec le code 127 quand la commande
+/// n'existe pas, et le front sait le reconnaître.
+pub fn missing_program(_command_line: &str, _working_directory: &Path) -> Option<String> {
+    None
 }

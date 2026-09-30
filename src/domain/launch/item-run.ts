@@ -42,10 +42,27 @@ export type ItemRunEvent =
   | { type: "stop-requested" }
   /** L'arrêt a échoué : la commande tourne toujours. */
   | { type: "stop-failed"; error: string }
-  | { type: "exited"; code: number | null };
+  /** `missingProgram` : programme introuvable repéré par le système (voir SystemAdapter). */
+  | { type: "exited"; code: number | null; missingProgram?: string };
 
 /** Un serveur de dev bavard ne doit pas faire grossir la mémoire indéfiniment. */
 export const MAX_OUTPUT_LINES = 500;
+
+/**
+ * Codes de sortie des shells quand la commande elle-même n'existe pas : 127 pour
+ * `sh`, `bash` et `zsh`. 9009 pour `cmd.exe`, mais seulement si un script le
+ * renvoie (`exit /b %errorlevel%`) : `cmd /c` sort avec 1, d'où `missingProgram`.
+ */
+const COMMAND_NOT_FOUND_EXIT_CODES: ReadonlySet<number> = new Set([127, 9009]);
+
+const NOT_FOUND_HINT = "Check its spelling, and that the program is installed and in your PATH.";
+
+function describeExit(code: number | null, missingProgram: string | undefined): string {
+  if (code === null) return "Command was terminated by the system.";
+  if (missingProgram !== undefined) return `Command not found: ${missingProgram}. ${NOT_FOUND_HINT}`;
+  if (COMMAND_NOT_FOUND_EXIT_CODES.has(code)) return `Command not found (exit code ${code}). ${NOT_FOUND_HINT}`;
+  return `Command exited with code ${code}.`;
+}
 
 export function createItemRun(itemId: string, status: "pending" | "skipped" = "pending"): ItemRun {
   return { itemId, status, stopRequested: false, output: [] };
@@ -76,10 +93,7 @@ export function applyItemRunEvent(run: ItemRun, event: ItemRunEvent): ItemRun {
         ...run,
         status: "failed",
         exitCode: event.code,
-        error:
-          event.code === null
-            ? "Command was terminated by the system."
-            : `Command exited with code ${event.code}.`,
+        error: describeExit(event.code, event.missingProgram),
       };
   }
 }

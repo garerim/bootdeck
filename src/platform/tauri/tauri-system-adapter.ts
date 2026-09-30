@@ -7,7 +7,7 @@ import { invokeCommand } from "@/platform/tauri/invoke";
 const ProcessEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("stdout"), line: z.string() }),
   z.object({ type: z.literal("stderr"), line: z.string() }),
-  z.object({ type: z.literal("exited"), code: z.number().int().nullable() }),
+  z.object({ type: z.literal("exited"), code: z.number().int().nullable(), missingProgram: z.string().optional() }),
 ]) satisfies z.ZodType<ProcessEvent>;
 
 /** Opérations système réelles, exécutées par Rust (`commands/launcher.rs`, `commands/processes.rs`). */

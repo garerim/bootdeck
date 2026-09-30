@@ -12,7 +12,8 @@ export type ProcessEvent =
   | { type: "stdout"; line: string }
   | { type: "stderr"; line: string }
   /** `code` vaut `null` si le processus a été tué par un signal (Unix). */
-  | { type: "exited"; code: number | null };
+  /** `missingProgram` : programme appelé introuvable, cause probable de l'échec. */
+  | { type: "exited"; code: number | null; missingProgram?: string };
 
 export interface LaunchApplicationRequest {
   path: string;

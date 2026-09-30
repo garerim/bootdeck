@@ -1,8 +1,9 @@
 //! Opérations dépendantes de l'OS.
 //!
 //! Chaque OS fournit les mêmes fonctions (`shell_command`, `application_command`,
-//! `configure_managed_process`, `kill_process_tree`), choisies à la compilation
-//! avec `#[cfg]` : un binaire ne cible qu'un seul OS, un trait n'apporterait rien.
+//! `configure_managed_process`, `track_process_tree` → `ProcessTree`, `describe_start_error`),
+//! choisies à la compilation avec `#[cfg]` : un binaire ne cible qu'un seul OS,
+//! un trait n'apporterait rien.
 
 use std::ffi::OsStr;
 use std::io;

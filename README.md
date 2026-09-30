@@ -52,6 +52,29 @@ lancement et utilisables dans tous les champs des items : `~/Projects/{project}`
   Aucun caractère spécial de shell n'est accepté, pour qu'une valeur ne puisse jamais ajouter de commande.
 - `{{` et `}}` écrivent des accolades littérales ; `{Majuscule}` ou `{"json": 1}` ne sont pas des variables.
 
+## Commandes lancées
+
+Les commandes d'un preset (`npm run dev`…) sont suivies par l'application : sortie en direct, arrêt avec
+le bouton Stop, et arrêt automatique à la fermeture de l'app. Sous Windows, chaque commande et les
+programmes qu'elle démarre sont regroupés dans un *Job Object* : même si l'application plante, Windows
+arrête ces processus, aucun serveur ne reste orphelin en occupant son port. Un programme ouvert par une
+commande qui s'est terminée normalement (ex. `start notepad`) reste ouvert.
+
+Une seule instance de l'application tourne à la fois : la relancer ramène la fenêtre existante au premier plan.
+
+## Raccourcis clavier
+
+| Raccourci    | Effet                                       |
+| ------------ | ------------------------------------------- |
+| `Ctrl+N`     | Nouveau preset                              |
+| `Ctrl+S`     | Enregistrer le preset en cours d'édition    |
+| `Ctrl+Enter` | Lancer le preset affiché                    |
+| `Échap`      | Annuler l'édition, ou revenir à la liste    |
+| `Ctrl+,`     | Réglages                                    |
+
+Dans l'application compilée, les raccourcis du navigateur intégré (F5, Ctrl+R, Ctrl+P, Ctrl+F) et son menu
+contextuel sont désactivés, sauf dans les champs de saisie.
+
 ## Organisation
 
 ```text

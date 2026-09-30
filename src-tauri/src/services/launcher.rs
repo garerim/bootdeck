@@ -131,7 +131,7 @@ pub fn launch_application(request: &LaunchApplicationRequest, home: &Path) -> Re
         .stderr(Stdio::null());
     let mut child = command
         .spawn()
-        .map_err(|error| AppError::io("start", &program, error))?;
+        .map_err(|error| AppError::start(&program, error))?;
 
     // Récupère le code de sortie quand l'application se termine, pour qu'elle ne
     // reste pas en « zombie » sous Unix. Le thread dort pendant ce temps.

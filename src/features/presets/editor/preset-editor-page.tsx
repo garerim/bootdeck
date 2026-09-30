@@ -1,5 +1,6 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { CircleAlert, Plus, SearchX } from "lucide-react";
+import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { Page, PageHeader } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { MAX_ITEMS_PER_PRESET, PRESET_ITEM_TYPES, type PresetItemType } from "@/
 import {
   emptyItemDraft,
   emptyPresetDraft,
+  isDraftModified,
   moveItem,
   presetToDraft,
   validateDraft,
@@ -26,13 +28,22 @@ import { ItemEditor } from "@/features/presets/editor/item-editor";
 import { TextField } from "@/features/presets/editor/text-field";
 import { VariablesEditor } from "@/features/presets/editor/variables-editor";
 import { ITEM_TYPE_META } from "@/features/presets/item-types";
+import { useShortcut } from "@/hooks/use-shortcut";
+import { SHORTCUTS, withShortcut } from "@/lib/shortcuts";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
 
 const FORM_ID = "preset-form";
 
+interface PresetEditorPageProps {
+  /** Absent : création d'un preset. */
+  presetId?: string;
+  /** Item à mettre en avant à l'ouverture (arrivée depuis « Edit item » d'un item en échec). */
+  focusItemId?: string;
+}
+
 /** Création (sans `presetId`) ou modification d'un preset. */
-export function PresetEditorPage({ presetId }: { presetId?: string }) {
+export function PresetEditorPage({ presetId, focusItemId }: PresetEditorPageProps) {
   const existing = usePresetsStore((state) =>
     presetId === undefined ? undefined : state.presets.find((preset) => preset.id === presetId),
   );
@@ -60,6 +71,7 @@ export function PresetEditorPage({ presetId }: { presetId?: string }) {
           : { id: crypto.randomUUID(), createdAt: new Date().toISOString() }
       }
       isNew={!existing}
+      focusItemId={focusItemId}
     />
   );
 }
@@ -68,19 +80,29 @@ interface PresetEditorFormProps {
   initialDraft: PresetDraft;
   identity: PresetIdentity;
   isNew: boolean;
+  focusItemId?: string;
 }
 
 function PresetEditorForm(props: PresetEditorFormProps) {
   const savePreset = usePresetsStore((state) => state.save);
   const navigate = useNavigationStore((state) => state.navigate);
+  const setUnsavedChanges = useNavigationStore((state) => state.setUnsavedChanges);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Valeurs figées au premier rendu : un nouveau rendu du parent ne doit pas
   // réinitialiser le formulaire ni régénérer l'id d'un nouveau preset.
   const [identity] = useState(props.identity);
   const [isNew] = useState(props.isNew);
+  const [initialDraft] = useState(props.initialDraft);
   const [draft, setDraft] = useState(props.initialDraft);
   const [submitted, setSubmitted] = useState(false);
-  const [lastAddedItemId, setLastAddedItemId] = useState<string | null>(null);
+  // Item dont le premier champ prend le focus : celui qu'on vient d'ajouter, ou celui à corriger.
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(props.focusItemId ?? null);
+
+  // Quitter l'éditeur avec des modifications demande confirmation (UnsavedChangesDialog).
+  const modified = isDraftModified(initialDraft, draft);
+  useEffect(() => setUnsavedChanges(modified), [modified, setUnsavedChanges]);
+  useEffect(() => () => setUnsavedChanges(false), [setUnsavedChanges]);
 
   // Les erreurs n'apparaissent qu'après une première tentative d'enregistrement,
   // puis se mettent à jour à chaque frappe.
@@ -102,8 +124,12 @@ function PresetEditorForm(props: PresetEditorFormProps) {
       return;
     }
     savePreset(result.preset);
-    navigate({ name: "preset-detail", presetId: result.preset.id });
+    toast.success(isNew ? `Created “${result.preset.name}”` : "Changes saved");
+    navigate({ name: "preset-detail", presetId: result.preset.id }, { force: true });
   }
+
+  useShortcut(SHORTCUTS.save, () => formRef.current?.requestSubmit());
+  useShortcut(SHORTCUTS.back, cancel);
 
   const update = (patch: Partial<PresetDraft>) => setDraft((current) => ({ ...current, ...patch }));
 
@@ -117,7 +143,7 @@ function PresetEditorForm(props: PresetEditorFormProps) {
   function addItem(type: PresetItemType) {
     const item = emptyItemDraft(type, crypto.randomUUID());
     setDraft((current) => ({ ...current, items: [...current.items, item] }));
-    setLastAddedItemId(item.id);
+    setFocusedItemId(item.id);
   }
 
   function moveItemBy(index: number, offset: -1 | 1) {
@@ -142,11 +168,11 @@ function PresetEditorForm(props: PresetEditorFormProps) {
           back={{ label: "Cancel", onClick: cancel }}
           actions={
             <>
-              <Button type="button" variant="ghost" onClick={cancel}>
+              <Button type="button" variant="ghost" onClick={cancel} title={withShortcut("Cancel", SHORTCUTS.back)}>
                 Cancel
               </Button>
               {/* Le bouton est hors du <form> (dans l'en-tête) : l'attribut form l'y rattache. */}
-              <Button type="submit" form={FORM_ID}>
+              <Button type="submit" form={FORM_ID} title={withShortcut("Save", SHORTCUTS.save)}>
                 {isNew ? "Create preset" : "Save changes"}
               </Button>
             </>
@@ -154,7 +180,7 @@ function PresetEditorForm(props: PresetEditorFormProps) {
         />
       }
     >
-      <form id={FORM_ID} onSubmit={handleSubmit} noValidate className="flex flex-col gap-8">
+      <form ref={formRef} id={FORM_ID} onSubmit={handleSubmit} noValidate className="flex flex-col gap-8">
         {errorCount > 0 && (
           <div
             role="alert"
@@ -256,7 +282,7 @@ function PresetEditorForm(props: PresetEditorFormProps) {
                 position={index + 1}
                 total={draft.items.length}
                 errors={errors}
-                autoFocus={item.id === lastAddedItemId}
+                autoFocus={item.id === focusedItemId}
                 onChange={(patch) => updateItem(item.id, patch)}
                 onMove={(offset) => moveItemBy(index, offset)}
                 onRemove={() => removeItem(item.id)}

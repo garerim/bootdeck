@@ -10,16 +10,51 @@ export type Route =
   | { name: "presets" }
   | { name: "preset-detail"; presetId: string }
   | { name: "preset-new" }
-  | { name: "preset-edit"; presetId: string }
+  /** `itemId` : item à mettre en avant à l'ouverture (ex. « corriger cet item »). */
+  | { name: "preset-edit"; presetId: string; itemId?: string }
   | { name: "recent" }
   | { name: "settings" };
 
-interface NavigationState {
-  route: Route;
-  navigate: (route: Route) => void;
+export interface NavigateOptions {
+  /** Ignore les modifications non enregistrées (ex. juste après les avoir enregistrées). */
+  force?: boolean;
 }
 
-export const useNavigationStore = create<NavigationState>()((set) => ({
+interface NavigationState {
+  route: Route;
+  /** L'écran courant a des modifications non enregistrées : quitter demande confirmation. */
+  unsavedChanges: boolean;
+  /** Destination retenue en attendant que l'utilisateur confirme l'abandon des modifications. */
+  pendingRoute: Route | null;
+  navigate: (route: Route, options?: NavigateOptions) => void;
+  setUnsavedChanges: (unsaved: boolean) => void;
+  /** Abandonne les modifications et va à la destination retenue. */
+  confirmNavigation: () => void;
+  /** Reste sur l'écran courant. */
+  cancelNavigation: () => void;
+}
+
+function isSameRoute(a: Route, b: Route): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export const useNavigationStore = create<NavigationState>()((set, get) => ({
   route: { name: "presets" },
-  navigate: (route) => set({ route }),
+  unsavedChanges: false,
+  pendingRoute: null,
+  navigate: (route, options = {}) => {
+    const { route: current, unsavedChanges } = get();
+    if (isSameRoute(route, current)) return;
+    if (unsavedChanges && !options.force) {
+      set({ pendingRoute: route });
+      return;
+    }
+    set({ route, unsavedChanges: false, pendingRoute: null });
+  },
+  setUnsavedChanges: (unsavedChanges) => set({ unsavedChanges }),
+  confirmNavigation: () => {
+    const { pendingRoute } = get();
+    if (pendingRoute) set({ route: pendingRoute, unsavedChanges: false, pendingRoute: null });
+  },
+  cancelNavigation: () => set({ pendingRoute: null }),
 }));

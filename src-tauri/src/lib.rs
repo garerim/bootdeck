@@ -16,7 +16,17 @@ use services::storage::DataFiles;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // Premier plugin, avant toute initialisation : une deuxième instance s'arrête
+    // aussitôt et c'est la fenêtre déjà ouverte qui revient au premier plan. Deux
+    // instances écriraient chacune leur version de presets.json et l'une écraserait l'autre.
+    // Les arguments transmis par la deuxième instance sont ignorés.
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        focus_main_window(app);
+    }));
+
+    builder
         // Utilisé uniquement depuis Rust (commands/dialogs.rs). Son API JavaScript reste
         // bloquée : aucune permission `dialog:*` n'est accordée dans les capabilities.
         .plugin(tauri_plugin_dialog::init())
@@ -49,4 +59,13 @@ pub fn run() {
                 app.state::<ProcessRegistry>().stop_all();
             }
         });
+}
+
+#[cfg(desktop)]
+fn focus_main_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }

@@ -41,6 +41,12 @@ describe("applyItemRunEvent", () => {
     expect(play(...base, { type: "exited", code: null }).error).toBe("Command was terminated by the system.");
   });
 
+  it("explique une commande introuvable : programme signalé par le système, ou code 127 des shells Unix", () => {
+    const base: ItemRunEvent[] = [{ type: "started" }, { type: "process-started", processId: 7 }];
+    expect(play(...base, { type: "exited", code: 1, missingProgram: "npx" }).error).toMatch(/^Command not found: npx\. /);
+    expect(play(...base, { type: "exited", code: 127 }).error).toMatch(/^Command not found \(exit code 127\)/);
+  });
+
   it("gère une commande si courte que sa fin arrive avant son identifiant", () => {
     const run = play({ type: "started" }, { type: "exited", code: 0 }, { type: "process-started", processId: 7 });
     expect(run).toMatchObject({ status: "success", processId: 7 });

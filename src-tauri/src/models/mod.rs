@@ -45,12 +45,19 @@ pub struct ExecuteCommandRequest {
 pub type ProcessId = u64;
 
 /// Événements d'un processus géré, envoyés au front au fil de l'eau.
-/// JSON : `{ "type": "stdout", "line": "…" }`, `{ "type": "exited", "code": 1 }`.
+/// JSON : `{ "type": "stdout", "line": "…" }`, `{ "type": "exited", "code": 1 }`,
+/// `{ "type": "exited", "code": 1, "missingProgram": "npx" }`.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum ProcessEvent {
     Stdout { line: String },
     Stderr { line: String },
     /// `code` est absent si le processus a été tué par un signal (Unix).
-    Exited { code: Option<i32> },
+    /// `missingProgram` : programme appelé par la commande et introuvable, si c'est
+    /// la cause probable de l'échec (voir `system::missing_program`).
+    Exited {
+        code: Option<i32>,
+        #[serde(rename = "missingProgram", skip_serializing_if = "Option::is_none")]
+        missing_program: Option<String>,
+    },
 }

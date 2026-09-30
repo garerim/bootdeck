@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 use crate::errors::AppError;
 use crate::models::{ProcessEvent, ProcessId};
-use crate::system;
+use crate::system::{self, ProcessTree};
 
 /// Au-delà, une ligne sans retour à la ligne est découpée (barres de progression…).
 const MAX_LINE_BYTES: u64 = 8 * 1024;
@@ -33,8 +33,8 @@ type EventSink = Arc<dyn Fn(ProcessEvent) + Send + Sync>;
 #[derive(Default)]
 pub struct ProcessRegistry {
     next_id: AtomicU64,
-    /// Processus en cours : identifiant de l'app → PID de l'OS.
-    running: Arc<Mutex<HashMap<ProcessId, u32>>>,
+    /// Processus en cours : identifiant de l'app → arbre de processus de l'OS.
+    running: Arc<Mutex<HashMap<ProcessId, Arc<ProcessTree>>>>,
 }
 
 impl ProcessRegistry {
@@ -53,10 +53,11 @@ impl ProcessRegistry {
 
         let mut child = command
             .spawn()
-            .map_err(|error| AppError::io("start", command.get_program(), error))?;
+            .map_err(|error| AppError::start(command.get_program(), error))?;
+        let tree = Arc::new(system::track_process_tree(&child));
 
         let id = self.next_id.fetch_add(1, Ordering::Relaxed) + 1;
-        lock(&self.running).insert(id, child.id());
+        lock(&self.running).insert(id, tree);
 
         let on_event: EventSink = Arc::new(on_event);
         let (finished_tx, finished_rx) = mpsc::channel();
@@ -83,7 +84,9 @@ impl ProcessRegistry {
             let code = child.wait().ok().and_then(|status| status.code());
             // Retiré du registre dès sa fin : son PID pourra être réattribué par
             // l'OS, un `stop` tardif ne doit surtout pas viser un autre programme.
-            lock(&running).remove(&id);
+            if let Some(tree) = lock(&running).remove(&id) {
+                tree.release();
+            }
 
             let deadline = Instant::now() + OUTPUT_DRAIN_TIMEOUT;
             for _ in 0..2 {
@@ -92,7 +95,7 @@ impl ProcessRegistry {
                     break;
                 }
             }
-            on_event(ProcessEvent::Exited { code });
+            on_event(ProcessEvent::Exited { code, missing_program: None });
         });
 
         Ok(id)
@@ -101,18 +104,19 @@ impl ProcessRegistry {
     /// Arrête le processus et ses descendants. Sans effet s'il est déjà terminé
     /// (idempotent : « s'assurer qu'il est arrêté »).
     pub fn stop(&self, id: ProcessId) -> Result<(), AppError> {
-        let pid = lock(&self.running).get(&id).copied();
-        match pid {
+        // Copié hors du verrou : l'arrêt peut prendre du temps (repli sur `taskkill`).
+        let tree = lock(&self.running).get(&id).cloned();
+        match tree {
             None => Ok(()),
-            Some(pid) => system::kill_process_tree(pid).map_err(|source| AppError::Stop { pid, source }),
+            Some(tree) => tree.kill().map_err(|source| AppError::Stop { pid: tree.pid(), source }),
         }
     }
 
     /// Arrête tous les processus en cours (fermeture de l'application).
     pub fn stop_all(&self) {
-        let pids: Vec<u32> = lock(&self.running).values().copied().collect();
-        for pid in pids {
-            let _ = system::kill_process_tree(pid);
+        let trees: Vec<Arc<ProcessTree>> = lock(&self.running).values().cloned().collect();
+        for tree in trees {
+            let _ = tree.kill();
         }
     }
 
@@ -195,13 +199,17 @@ mod tests {
         ProcessEvent::Stdout { line: line.into() }
     }
 
+    fn exited(code: i32) -> ProcessEvent {
+        ProcessEvent::Exited { code: Some(code), missing_program: None }
+    }
+
     #[test]
     fn streams_output_then_reports_the_exit_code() {
         let harness = Harness::new();
         harness.run("echo hello");
         assert_eq!(
             harness.wait_for_exit(),
-            vec![stdout("hello"), ProcessEvent::Exited { code: Some(0) }]
+            vec![stdout("hello"), exited(0)]
         );
     }
 
@@ -209,7 +217,7 @@ mod tests {
     fn reports_a_failing_exit_code() {
         let harness = Harness::new();
         harness.run("exit 3");
-        assert_eq!(harness.wait_for_exit(), vec![ProcessEvent::Exited { code: Some(3) }]);
+        assert_eq!(harness.wait_for_exit(), vec![exited(3)]);
     }
 
     #[test]

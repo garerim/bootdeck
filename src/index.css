@@ -137,3 +137,23 @@
     @apply font-sans;
     }
 }
+/*
+ * Réglage d'accessibilité « réduire les animations » du système : fondus, zooms
+ * et glissements deviennent instantanés. Les indicateurs de chargement continuent
+ * de tourner (ralentis) : ils informent qu'une action est en cours.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin {
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
+  }
+}

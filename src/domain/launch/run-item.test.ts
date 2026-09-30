@@ -58,4 +58,12 @@ describe("runItem", () => {
       { type: "exited", code: 1 },
     ]);
   });
+
+  it("relaie le programme introuvable signalé par le système", async () => {
+    const fake = createFakeSystem();
+    const events: ItemRunEvent[] = [];
+    await runItem(item(2), fake.system, (event) => events.push(event));
+    fake.emit(1, { type: "exited", code: 1, missingProgram: "npm" });
+    expect(events[events.length - 1]).toEqual({ type: "exited", code: 1, missingProgram: "npm" });
+  });
 });

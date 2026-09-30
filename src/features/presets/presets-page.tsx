@@ -4,6 +4,7 @@ import { Page, PageHeader } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
 import { startLaunch } from "@/features/launch/start-launch";
 import { PresetCard } from "@/features/presets/preset-card";
+import { SHORTCUTS, withShortcut } from "@/lib/shortcuts";
 import { useNavigationStore } from "@/stores/navigation-store";
 import { usePresetsStore } from "@/stores/presets-store";
 
@@ -12,7 +13,7 @@ export function PresetsPage() {
   const navigate = useNavigationStore((state) => state.navigate);
 
   const createButton = (
-    <Button onClick={() => navigate({ name: "preset-new" })}>
+    <Button onClick={() => navigate({ name: "preset-new" })} title={withShortcut("Create preset", SHORTCUTS.newPreset)}>
       <Plus data-icon="inline-start" />
       Create preset
     </Button>

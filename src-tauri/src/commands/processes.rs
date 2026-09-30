@@ -25,8 +25,18 @@ pub async fn execute_command(
     let working_directory = launcher::resolve_working_directory(request.working_directory.as_deref(), &home)?;
 
     let mut command = system::shell_command(command_line);
-    command.current_dir(working_directory);
+    command.current_dir(&working_directory);
+    let command_line = command_line.to_owned();
     registry.spawn(command, move |event| {
+        // En cas d'échec seulement : le programme appelé existait-il ? Sert à
+        // expliquer l'échec, jamais à empêcher une commande de s'exécuter.
+        let event = match event {
+            ProcessEvent::Exited { code: Some(code), .. } if code != 0 => ProcessEvent::Exited {
+                code: Some(code),
+                missing_program: system::missing_program(&command_line, &working_directory),
+            },
+            event => event,
+        };
         // Si la fenêtre a été rechargée, le canal est fermé : le processus continue.
         let _ = on_event.send(event);
     })

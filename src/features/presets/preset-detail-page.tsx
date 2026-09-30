@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Braces, Copy, Ellipsis, LoaderCircle, Pencil, Play, SearchX, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
 import { Page, PageHeader } from "@/components/layout/page";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ import { PresetIcon } from "@/features/presets/icons";
 import { formatItemSummary } from "@/features/presets/item-types";
 import { PresetItemRow } from "@/features/presets/preset-item-row";
 import { SessionStatusBadge } from "@/features/sessions/session-status-badge";
+import { useShortcut } from "@/hooks/use-shortcut";
+import { SHORTCUTS, withShortcut } from "@/lib/shortcuts";
 import { cn } from "@/lib/utils";
 import { useLaunchStore } from "@/stores/launch-store";
 import { useNavigationStore } from "@/stores/navigation-store";
@@ -42,6 +45,11 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const backToList = { label: "Back to presets", onClick: () => navigate({ name: "presets" }) };
+  const launching = run?.inProgress ?? false;
+  const canLaunch = preset !== undefined && !launching && preset.items.some((item) => item.enabled);
+
+  useShortcut(SHORTCUTS.launch, () => preset && startLaunch(preset), canLaunch);
+  useShortcut(SHORTCUTS.back, backToList.onClick);
 
   if (!preset) {
     return (
@@ -58,7 +66,6 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
 
   const disabledCount = preset.items.filter((item) => !item.enabled).length;
   const hasEnabledItems = preset.items.length > disabledCount;
-  const launching = run?.inProgress ?? false;
   // Seuls les items encore présents dans le preset comptent (un item a pu être supprimé depuis).
   const itemRuns = preset.items
     .map((item) => run?.items[item.id])
@@ -71,12 +78,16 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
 
   function handleDuplicate() {
     const copy = duplicatePreset(presetId);
-    if (copy) navigate({ name: "preset-detail", presetId: copy.id });
+    if (!copy) return;
+    toast.success(`Duplicated as “${copy.name}”`);
+    navigate({ name: "preset-detail", presetId: copy.id });
   }
 
   async function handleDelete() {
+    const name = preset?.name ?? "";
     await stopAllItems(presetId);
     removePreset(presetId);
+    toast.success(`Deleted “${name}”`);
     navigate({ name: "presets" });
   }
 
@@ -115,8 +126,8 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button
-                disabled={launching || !hasEnabledItems}
-                title={hasEnabledItems ? undefined : "All items are disabled"}
+                disabled={!canLaunch}
+                title={hasEnabledItems ? withShortcut("Launch", SHORTCUTS.launch) : "All items are disabled"}
                 onClick={() => startLaunch(preset)}
               >
                 {launching ? (
@@ -198,6 +209,7 @@ export function PresetDetailPage({ presetId }: { presetId: string }) {
                 canRun={!launching}
                 onRun={() => startLaunch(preset, item.id)}
                 onStop={() => void stopItem(presetId, item.id)}
+                onEdit={() => navigate({ name: "preset-edit", presetId, itemId: item.id })}
               />
             ))}
           </ol>

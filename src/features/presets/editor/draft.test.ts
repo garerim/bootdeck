@@ -4,6 +4,7 @@ import { MAX_ITEMS_PER_PRESET } from "@/domain/preset/schema";
 import {
   emptyItemDraft,
   emptyPresetDraft,
+  isDraftModified,
   itemFieldKey,
   variableFieldKey,
   moveItem,
@@ -93,6 +94,23 @@ describe("validateDraft", () => {
 
     expect(result.ok).toBe(false);
     expect(!result.ok && Object.keys(result.errors)).toEqual(["items"]);
+  });
+});
+
+describe("isDraftModified", () => {
+  it("détecte une modification, et son annulation à la main", () => {
+    const preset = demoPresets[0];
+    if (!preset) throw new Error("preset de démonstration attendu");
+    const initial = presetToDraft(preset);
+    expect(isDraftModified(initial, presetToDraft(preset))).toBe(false);
+
+    const renamed = { ...initial, name: `${initial.name}!` };
+    expect(isDraftModified(initial, renamed)).toBe(true);
+    expect(isDraftModified(initial, { ...renamed, name: initial.name })).toBe(false);
+
+    const withItem = { ...initial, items: [...initial.items, emptyItemDraft("url", ITEM_ID)] };
+    expect(isDraftModified(initial, withItem)).toBe(true);
+    expect(isDraftModified(initial, { ...withItem, items: withItem.items.slice(0, -1) })).toBe(false);
   });
 });
 

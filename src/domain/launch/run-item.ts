@@ -49,6 +49,6 @@ export async function runItem(
 
 function toItemRunEvent(event: ProcessEvent): ItemRunEvent {
   return event.type === "exited"
-    ? { type: "exited", code: event.code }
+    ? { type: "exited", code: event.code, missingProgram: event.missingProgram }
     : { type: "output", line: { stream: event.type, text: event.line } };
 }

@@ -55,6 +55,17 @@ export type FieldErrors = Record<string, string>;
 
 export type DraftValidation = { ok: true; preset: Preset } | { ok: false; errors: FieldErrors };
 
+/**
+ * Vrai si le brouillon diffère de son état d'origine (garde « modifications non
+ * enregistrées »). Un brouillon ne contient que des chaînes, des booléens et des
+ * tableaux, créés par les fonctions de ce fichier avec des clés toujours dans le
+ * même ordre : comparer leur JSON suffit. Annuler une modification à la main
+ * (retaper l'ancien texte, retirer l'item ajouté) revient bien à « non modifié ».
+ */
+export function isDraftModified(initial: PresetDraft, current: PresetDraft): boolean {
+  return JSON.stringify(initial) !== JSON.stringify(current);
+}
+
 export function emptyPresetDraft(): PresetDraft {
   return { name: "", description: "", icon: "", variables: [], items: [] };
 }

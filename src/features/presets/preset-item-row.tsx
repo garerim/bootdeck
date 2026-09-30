@@ -22,9 +22,11 @@ interface PresetItemRowProps {
   canRun: boolean;
   onRun: () => void;
   onStop: () => void;
+  /** Ouvre l'éditeur sur cet item (proposé quand il a échoué). */
+  onEdit: () => void;
 }
 
-export function PresetItemRow({ item, position, run, values, canRun, onRun, onStop }: PresetItemRowProps) {
+export function PresetItemRow({ item, position, run, values, canRun, onRun, onStop, onEdit }: PresetItemRowProps) {
   const [showOutput, setShowOutput] = useState(false);
   const resolved = run && values ? createVariableResolver(values)(item) : undefined;
   const shown = resolved?.ok ? resolved.item : item;
@@ -54,16 +56,16 @@ export function PresetItemRow({ item, position, run, values, canRun, onRun, onSt
           {run?.error && (
             <p className="mt-1 text-xs text-destructive">
               {run.error}
-              {hasOutput && !showOutput && (
+              {hasOutput && !showOutput && run.output.length > 0 && (
                 <>
                   {" "}
-                  <button
-                    type="button"
-                    onClick={() => setShowOutput(true)}
-                    className="font-medium underline underline-offset-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  >
-                    View details
-                  </button>
+                  <InlineAction onClick={() => setShowOutput(true)}>View details</InlineAction>
+                </>
+              )}
+              {run.status === "failed" && (
+                <>
+                  {" "}
+                  <InlineAction onClick={onEdit}>Edit item</InlineAction>
                 </>
               )}
             </p>
@@ -117,5 +119,17 @@ export function PresetItemRow({ item, position, run, values, canRun, onRun, onSt
         </div>
       )}
     </li>
+  );
+}
+
+function InlineAction({ onClick, children }: { onClick: () => void; children: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="font-medium underline underline-offset-2 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {children}
+    </button>
   );
 }
