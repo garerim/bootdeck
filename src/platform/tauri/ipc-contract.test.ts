@@ -32,10 +32,10 @@ const contract = ContractSchema.parse(contractJson);
 /** L'action du front qui doit produire chaque appel du contrat. */
 const FRONT_CALLS: Record<string, () => Promise<unknown>> = {
   "open_url refuses a URL that is not a web page": () => tauriSystemAdapter.openUrl("ftp://example.com/file"),
-  "open_folder reports a missing folder": () => tauriSystemAdapter.openFolder("~/workspace-presets-contract/missing"),
+  "open_folder reports a missing folder": () => tauriSystemAdapter.openFolder("~/startdeck-contract/missing"),
   "launch_application reports a missing program": () =>
     tauriSystemAdapter.launchApplication({
-      path: "~/workspace-presets-contract/tool.exe",
+      path: "~/startdeck-contract/tool.exe",
       args: ["--flag"],
       workingDirectory: "~",
     }),
@@ -43,7 +43,7 @@ const FRONT_CALLS: Record<string, () => Promise<unknown>> = {
     tauriSystemAdapter.executeCommand({ command: "echo contract", workingDirectory: "~" }, () => {}),
   "execute_command reports a missing working directory": () =>
     tauriSystemAdapter.executeCommand(
-      { command: "echo contract", workingDirectory: "~/workspace-presets-contract/missing" },
+      { command: "echo contract", workingDirectory: "~/startdeck-contract/missing" },
       () => {},
     ),
   "stop_process accepts a process that has already finished": () => tauriSystemAdapter.stopProcess(999999),

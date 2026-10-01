@@ -255,8 +255,13 @@ mod tests {
     #[test]
     fn stop_kills_the_whole_process_tree() {
         let harness = Harness::new();
-        // `ping` est un enfant du shell et écrit une ligne par seconde.
-        let id = harness.run(if cfg!(windows) { "ping -n 30 127.0.0.1" } else { "ping -c 30 127.0.0.1" });
+        // Un enfant du shell qui écrit une ligne par seconde (`ping` sous Windows ; sous
+        // Unix un sous-shell, `ping` étant souvent absent ou restreint, ex. en conteneur).
+        let id = harness.run(if cfg!(windows) {
+            "ping -n 30 127.0.0.1"
+        } else {
+            "sh -c 'while true; do echo tick; sleep 1; done'"
+        });
         harness.wait_until(|events| events.len() >= 2);
         assert!(harness.registry.is_running(id));
 
@@ -264,10 +269,24 @@ mod tests {
         harness.wait_for_exit();
         assert!(!harness.registry.is_running(id));
 
-        // Si `ping` avait survécu à son parent, il continuerait d'écrire.
+        // Si l'enfant avait survécu à son parent, il continuerait d'écrire.
         let count = harness.events().len();
         thread::sleep(Duration::from_millis(2500));
         assert_eq!(harness.events().len(), count, "output continued after stop");
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn stop_forces_a_command_that_ignores_the_polite_request() {
+        let harness = Harness::new();
+        // Le shell ignore SIGTERM : seul le SIGKILL envoyé après le délai de grâce l'arrête.
+        let id = harness.run("trap '' TERM; while true; do echo tick; sleep 1; done");
+        harness.wait_until(|events| !events.is_empty());
+
+        harness.registry.stop(id).unwrap();
+        let events = harness.wait_for_exit();
+        assert!(!harness.registry.is_running(id));
+        assert!(events.contains(&ProcessEvent::Exited { code: None, missing_program: None }), "{events:?}");
     }
 
     #[test]

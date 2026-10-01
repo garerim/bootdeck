@@ -30,10 +30,10 @@ test.beforeEach(async () => {
   server = createServer((request, response) => {
     pageRequests.push(request.url ?? "");
     response.setHeader("Content-Type", "text/html; charset=utf-8");
-    response.end("<title>Workspace Presets E2E</title><p>Opened by the end-to-end test. You can close this tab.</p>");
+    response.end("<title>Startdeck E2E</title><p>Opened by the end-to-end test. You can close this tab.</p>");
   });
   await new Promise<void>((listening) => server.listen(0, "127.0.0.1", listening));
-  folder = mkdtempSync(join(tmpdir(), "workspace-presets-e2e-"));
+  folder = mkdtempSync(join(tmpdir(), "startdeck-e2e-"));
   app = await launchDesktopApp();
 });
 
@@ -50,12 +50,12 @@ test.afterEach(async () => {
 test("créer un preset, l'enregistrer et le lancer ouvre réellement la page et le dossier", async () => {
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("server is not listening");
-  const url = `http://127.0.0.1:${address.port}/workspace-presets-e2e`;
+  const url = `http://127.0.0.1:${address.port}/startdeck-e2e`;
 
   await createAndLaunchPreset(app.page, { url, folder });
 
   // Effets réels, observés hors de l'application.
-  await expect.poll(() => pageRequests, { timeout: 20_000 }).toContain("/workspace-presets-e2e");
+  await expect.poll(() => pageRequests, { timeout: 20_000 }).toContain("/startdeck-e2e");
   await expect.poll(() => explorerWindowsShowing(basename(folder)), { timeout: 20_000 }).toBeGreaterThan(0);
 
   // Enregistré sur le disque : le preset est toujours là après un redémarrage de l'app.

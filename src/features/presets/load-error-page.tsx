@@ -27,14 +27,14 @@ export function describeLoadError(error: PresetsLoadError): {
       const hidden = error.issues.length - MAX_DETAILS;
       return {
         title: "Your presets file contains invalid data",
-        description: "Some values don’t match what Workspace Presets expects.",
+        description: "Some values don’t match what Startdeck expects.",
         details: hidden > 0 ? [...details, `…and ${hidden} more`] : details,
       };
     }
     case "unsupported-version":
       return {
         title: "This presets file comes from a newer version",
-        description: `It uses file format version ${error.found}, but this version of Workspace Presets only understands version ${error.expected}. Update the app to open it.`,
+        description: `It uses file format version ${error.found}, but this version of Startdeck only understands version ${error.expected}. Update the app to open it.`,
         details: [],
       };
     case "read-failed":
@@ -79,7 +79,7 @@ export function LoadErrorPage({ error, filePath }: LoadErrorPageProps) {
         <div className="min-w-0 flex-1">
           <h2 className="text-sm font-semibold">{title}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {description} Workspace Presets hasn’t changed it.
+            {description} Startdeck hasn’t changed it.
           </p>
 
           {filePath && <p className="mt-3 font-mono text-xs break-all text-muted-foreground">{filePath}</p>}

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    workspace_presets_lib::run()
+    startdeck_lib::run()
 }

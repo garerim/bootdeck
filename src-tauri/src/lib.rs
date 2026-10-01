@@ -42,7 +42,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .manage(ProcessRegistry::default())
         .setup(|app| {
-            // Dossier de données propre à l'app (Windows : %APPDATA%\dev.workspacepresets.desktop).
+            // Dossier de données propre à l'app (Windows : %APPDATA%\dev.startdeck.desktop).
             let data_directory = app.path().app_data_dir()?;
             app.manage(DataFiles::new(&data_directory));
             Ok(())

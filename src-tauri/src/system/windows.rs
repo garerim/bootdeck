@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn finds_the_missing_program_at_the_start_of_a_command_line() {
-        let dir = std::env::temp_dir().join("workspace-presets-missing-program");
+        let dir = std::env::temp_dir().join("startdeck-missing-program");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("local-script.bat"), "@echo off").unwrap();
         let missing = |line: &str| missing_program(line, &dir);

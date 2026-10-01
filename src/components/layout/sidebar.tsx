@@ -1,4 +1,5 @@
 import { History, Layers, Settings, ShieldCheck, type LucideIcon } from "lucide-react";
+import { AppLogo } from "@/components/app-logo";
 import { cn } from "@/lib/utils";
 import { useNavigationStore, type Route } from "@/stores/navigation-store";
 
@@ -37,10 +38,8 @@ export function Sidebar() {
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center gap-2.5 px-4">
-        <div className="grid size-7 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-          <Layers className="size-4" />
-        </div>
-        <span className="text-sm font-semibold tracking-tight">Workspace Presets</span>
+        <AppLogo className="size-7 shrink-0" />
+        <span className="text-sm font-semibold tracking-tight">Startdeck</span>
       </div>
 
       <nav aria-label="Main" className="flex flex-col gap-0.5 px-2 py-2">

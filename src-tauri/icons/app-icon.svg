@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Icône source de l'application. Régénérer les tailles : voir docs/packaging.md.
-       Glyphe « layers » de Lucide (licence ISC), déjà utilisé comme logo dans l'app. -->
+  <!-- Icône source de Startdeck : une pile de cartes dont la première est une flèche
+       (un preset = plusieurs choses lancées ensemble). Régénérer les tailles : docs/packaging.md.
+       Coins arrondis : remplissage + trait de même couleur à jointure ronde. -->
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#2b6bff"/>
@@ -8,9 +9,9 @@
     </linearGradient>
   </defs>
   <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#background)"/>
-  <g transform="translate(212 212) scale(25)" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/>
-    <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/>
-    <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>
+  <g fill="#ffffff" stroke="#ffffff" stroke-width="44" stroke-linejoin="round">
+    <path d="M249.0 256.9 L425.0 239.3 L425.0 255.1 L269.0 270.7 L269.0 610.7 L249.0 612.7 Z"/>
+    <path d="M349.0 342.9 L525.0 325.3 L525.0 341.1 L369.0 356.7 L369.0 696.7 L349.0 698.7 Z"/>
+    <path d="M449.0 428.9 L637.4 410.1 L769.5 573.0 L634.7 766.1 L449.0 784.7 Z"/>
   </g>
 </svg>

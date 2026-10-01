@@ -152,7 +152,7 @@ mod tests {
     impl TempDir {
         fn new(test_name: &str) -> Self {
             let path = std::env::temp_dir().join(format!(
-                "workspace-presets-launcher-{test_name}-{}",
+                "startdeck-launcher-{test_name}-{}",
                 std::process::id()
             ));
             let _ = fs::remove_dir_all(&path);

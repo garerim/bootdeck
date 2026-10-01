@@ -1,6 +1,8 @@
-# Workspace Presets
+# Startdeck
 
 Application desktop pour retrouver son contexte de travail complet (éditeur, terminal, URLs, commandes) en un clic.
+
+Plateformes : **Windows 10/11** (testé) · **Linux** (aperçu, voir [docs/linux.md](docs/linux.md)) · macOS (non testé).
 
 Stack : Tauri 2 (Rust) · React 19 · TypeScript · Vite · Tailwind CSS 4 · shadcn/ui · Zustand · Zod · Vitest.
 
@@ -10,6 +12,8 @@ Stack : Tauri 2 (Rust) · React 19 · TypeScript · Vite · Tailwind CSS 4 · sh
 - Rust stable (`rustup`, cible `x86_64-pc-windows-msvc`)
 - Visual Studio 2022 avec le workload « Développement Desktop en C++ » (MSVC + Windows SDK)
 - WebView2 (installé par défaut sur Windows 11)
+
+Linux : prérequis et différences dans [docs/linux.md](docs/linux.md).
 
 ## Scripts
 
@@ -30,9 +34,9 @@ Les presets sont stockés dans un seul fichier JSON versionné, lisible et modif
 
 | OS      | Emplacement                                                     |
 | ------- | --------------------------------------------------------------- |
-| Windows | `%APPDATA%\dev.workspacepresets.desktop\presets.json`           |
-| macOS   | `~/Library/Application Support/dev.workspacepresets.desktop/…`  |
-| Linux   | `~/.local/share/dev.workspacepresets.desktop/…`                 |
+| Windows | `%APPDATA%\dev.startdeck.desktop\presets.json`           |
+| macOS   | `~/Library/Application Support/dev.startdeck.desktop/…`  |
+| Linux   | `~/.local/share/dev.startdeck.desktop/…`                 |
 
 Le chemin exact est affiché dans **Settings**. Si le fichier devient illisible, l'application ne le modifie
 pas : elle propose de le renommer en `presets.invalid-<horodatage>.json` et de repartir d'une liste vide.
@@ -89,7 +93,7 @@ contextuel sont désactivés, sauf dans les champs de saisie.
 Le parcours de bout en bout tourne de deux façons :
 
 - `npm run test:e2e` : l'interface dans Edge, avec le système simulé. Rapide, sans effet de bord.
-- `npm run test:e2e:desktop` (Windows) : compile une variante de l'app (identifiant `dev.workspacepresets.e2e`,
+- `npm run test:e2e:desktop` (Windows) : compile une variante de l'app (identifiant `dev.startdeck.e2e`,
   données et instance séparées : l'app habituelle peut rester ouverte), puis la pilote à travers sa WebView2.
   Le lancement est réel : un onglet s'ouvre dans le navigateur par défaut (il reste ouvert) et une fenêtre de
   l'Explorateur (refermée par le test). La première compilation prend quelques minutes.
