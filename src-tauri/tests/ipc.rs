@@ -19,7 +19,7 @@ use tauri::test::{get_ipc_response, mock_builder, MockRuntime, INVOKE_KEY};
 use tauri::webview::InvokeRequest;
 use tauri::{App, Manager, WebviewWindow, WebviewWindowBuilder};
 
-use startdeck_lib::ipc_test_support::{invoke_handler, DataFiles, ProcessEvent, ProcessRegistry};
+use bootdeck_lib::ipc_test_support::{invoke_handler, DataFiles, ProcessEvent, ProcessRegistry};
 
 const CONTRACT: &str = include_str!("../../contracts/ipc.json");
 
@@ -60,7 +60,7 @@ struct TestApp {
 
 impl TestApp {
     fn new(test_name: &str) -> Self {
-        let data = std::env::temp_dir().join(format!("startdeck-ipc-{test_name}-{}", std::process::id()));
+        let data = std::env::temp_dir().join(format!("bootdeck-ipc-{test_name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&data);
         let app = mock_builder()
             .manage(ProcessRegistry::default())

@@ -10,14 +10,14 @@
     {
       "name": "open_folder reports a missing folder",
       "command": "open_folder",
-      "args": { "path": "~/startdeck-contract/missing" },
+      "args": { "path": "~/bootdeck-contract/missing" },
       "response": { "error": "not-found" }
     },
     {
       "name": "launch_application reports a missing program",
       "command": "launch_application",
       "args": {
-        "request": { "path": "~/startdeck-contract/tool.exe", "args": ["--flag"], "workingDirectory": "~" }
+        "request": { "path": "~/bootdeck-contract/tool.exe", "args": ["--flag"], "workingDirectory": "~" }
       },
       "response": { "error": "not-found" }
     },
@@ -31,7 +31,7 @@
       "name": "execute_command reports a missing working directory",
       "command": "execute_command",
       "args": {
-        "request": { "command": "echo contract", "workingDirectory": "~/startdeck-contract/missing" },
+        "request": { "command": "echo contract", "workingDirectory": "~/bootdeck-contract/missing" },
         "onEvent": "<channel>"
       },
       "response": { "error": "not-found" }

@@ -1,7 +1,7 @@
 import { useId } from "react";
 
 /**
- * Logo de Startdeck : une pile de cartes dont la première est une flèche.
+ * Logo de Bootdeck : une pile de cartes dont la première est une flèche.
  * Même dessin que l'icône de l'application (`src-tauri/icons/app-icon.svg`),
  * recadré sur le carré arrondi.
  */

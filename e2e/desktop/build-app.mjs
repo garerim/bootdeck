@@ -1,4 +1,4 @@
-// Compile la variante E2E de l'application desktop (identifiant `dev.startdeck.e2e`),
+// Compile la variante E2E de l'application desktop (identifiant `dev.bootdeck.e2e`),
 // dans son propre dossier de compilation : l'exécutable de `npm run dev` n'est pas touché.
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";

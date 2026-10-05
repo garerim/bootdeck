@@ -39,7 +39,7 @@ export function Sidebar() {
     <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex h-14 items-center gap-2.5 px-4">
         <AppLogo className="size-7 shrink-0" />
-        <span className="text-sm font-semibold tracking-tight">Startdeck</span>
+        <span className="text-sm font-semibold tracking-tight">Bootdeck</span>
       </div>
 
       <nav aria-label="Main" className="flex flex-col gap-0.5 px-2 py-2">

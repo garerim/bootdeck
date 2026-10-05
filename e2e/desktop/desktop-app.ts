@@ -8,12 +8,12 @@ import { chromium, type Browser, type Page } from "@playwright/test";
  * L'application desktop réelle, pilotée par Playwright à travers sa WebView2
  * (Chromium) grâce au protocole CDP. Windows uniquement.
  *
- * C'est une variante compilée avec l'identifiant `dev.startdeck.e2e`
+ * C'est une variante compilée avec l'identifiant `dev.bootdeck.e2e`
  * (`src-tauri/tauri.e2e.conf.json`) : ses données, son instance unique et son profil
  * WebView2 sont séparés de ceux de l'app de l'utilisateur, qui peut rester ouverte.
  */
-export const E2E_IDENTIFIER = "dev.startdeck.e2e";
-export const APP_EXE = resolve("src-tauri/target/e2e/debug/startdeck.exe");
+export const E2E_IDENTIFIER = "dev.bootdeck.e2e";
+export const APP_EXE = resolve("src-tauri/target/e2e/debug/bootdeck.exe");
 const APP_ORIGIN = "http://tauri.localhost";
 
 export interface DesktopApp {
@@ -54,7 +54,7 @@ export async function launchDesktopApp({ resetData = true }: LaunchOptions = {})
   }
 }
 
-/** Dossier de données de l'app de test (%APPDATA%\dev.startdeck.e2e), jamais celui de l'utilisateur. */
+/** Dossier de données de l'app de test (%APPDATA%\dev.bootdeck.e2e), jamais celui de l'utilisateur. */
 export function removeDesktopAppData(): void {
   const appData = process.env.APPDATA;
   if (!appData) throw new Error("APPDATA is not set");

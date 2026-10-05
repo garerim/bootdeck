@@ -1,4 +1,4 @@
-# Startdeck
+# Bootdeck
 
 Application desktop pour retrouver son contexte de travail complet (éditeur, terminal, URLs, commandes) en un clic.
 
@@ -34,9 +34,9 @@ Les presets sont stockés dans un seul fichier JSON versionné, lisible et modif
 
 | OS      | Emplacement                                                     |
 | ------- | --------------------------------------------------------------- |
-| Windows | `%APPDATA%\dev.startdeck.desktop\presets.json`           |
-| macOS   | `~/Library/Application Support/dev.startdeck.desktop/…`  |
-| Linux   | `~/.local/share/dev.startdeck.desktop/…`                 |
+| Windows | `%APPDATA%\dev.bootdeck.desktop\presets.json`           |
+| macOS   | `~/Library/Application Support/dev.bootdeck.desktop/…`  |
+| Linux   | `~/.local/share/dev.bootdeck.desktop/…`                 |
 
 Le chemin exact est affiché dans **Settings**. Si le fichier devient illisible, l'application ne le modifie
 pas : elle propose de le renommer en `presets.invalid-<horodatage>.json` et de repartir d'une liste vide.
@@ -93,7 +93,7 @@ contextuel sont désactivés, sauf dans les champs de saisie.
 Le parcours de bout en bout tourne de deux façons :
 
 - `npm run test:e2e` : l'interface dans Edge, avec le système simulé. Rapide, sans effet de bord.
-- `npm run test:e2e:desktop` (Windows) : compile une variante de l'app (identifiant `dev.startdeck.e2e`,
+- `npm run test:e2e:desktop` (Windows) : compile une variante de l'app (identifiant `dev.bootdeck.e2e`,
   données et instance séparées : l'app habituelle peut rester ouverte), puis la pilote à travers sa WebView2.
   Le lancement est réel : un onglet s'ouvre dans le navigateur par défaut (il reste ouvert) et une fenêtre de
   l'Explorateur (refermée par le test). La première compilation prend quelques minutes.
@@ -119,3 +119,7 @@ src-tauri/src/
   errors.rs     type d'erreur de l'application
 src-tauri/tests/  tests d'intégration de l'IPC (runtime Tauri simulé)
 ```
+
+## Licence
+
+[MIT](LICENSE)

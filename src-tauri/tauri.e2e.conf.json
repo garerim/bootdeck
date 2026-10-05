@@ -1,4 +1,4 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "identifier": "dev.startdeck.e2e"
+  "identifier": "dev.bootdeck.e2e"
 }

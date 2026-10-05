@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <!-- Icône source de Startdeck : une pile de cartes dont la première est une flèche
+  <!-- Icône source de Bootdeck : une pile de cartes dont la première est une flèche
        (un preset = plusieurs choses lancées ensemble). Régénérer les tailles : docs/packaging.md.
        Coins arrondis : remplissage + trait de même couleur à jointure ronde. -->
   <defs>

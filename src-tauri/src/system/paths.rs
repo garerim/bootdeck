@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn dialogs_start_in_the_folder_already_entered() {
-        let root = std::env::temp_dir().join(format!("startdeck-start-dir-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("bootdeck-start-dir-{}", std::process::id()));
         let project = root.join("project");
         std::fs::create_dir_all(&project).unwrap();
         std::fs::write(project.join("app.exe"), "").unwrap();

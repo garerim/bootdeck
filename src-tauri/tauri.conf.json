@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Startdeck",
+  "productName": "Bootdeck",
   "version": "0.1.0",
-  "identifier": "dev.startdeck.desktop",
+  "identifier": "dev.bootdeck.desktop",
   "build": {
     "beforeDevCommand": "npm run dev:web",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Startdeck",
+        "title": "Bootdeck",
         "width": 1100,
         "height": 720,
         "minWidth": 800,
@@ -29,10 +29,11 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "publisher": "Startdeck",
+    "publisher": "Bootdeck",
+    "license": "MIT",
     "category": "DeveloperTool",
     "shortDescription": "Launch complete work environments in one click",
-    "longDescription": "Startdeck opens your editor, terminal, web pages, folders and commands together, in the right order, with one click. Everything stays on your computer.",
+    "longDescription": "Bootdeck opens your editor, terminal, web pages, folders and commands together, in the right order, with one click. Everything stays on your computer.",
     "windows": {
       "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
       "nsis": {

@@ -1,6 +1,6 @@
 # Packaging (Windows)
 
-Startdeck est distribué sous la forme d'un **installeur NSIS par utilisateur** :
+Bootdeck est distribué sous la forme d'un **installeur NSIS par utilisateur** :
 aucun droit administrateur n'est demandé, ni pour installer, ni pour lancer l'application.
 
 > Linux : `.deb`, `.rpm` et `.AppImage`, voir [linux.md](linux.md). macOS : non testé. Chaque paquet doit
@@ -20,7 +20,7 @@ npm run build
 1. `npm run build:web` : vérification des types puis build du front (`dist/`) ;
 2. `cargo build --release` : optimisations maximales (`lto`, `codegen-units = 1`, `opt-level = 3`,
    `panic = "abort"`, symboles retirés), le front est **embarqué dans l'exécutable** ;
-3. NSIS : `src-tauri/target/release/bundle/nsis/Startdeck_<version>_x64-setup.exe`.
+3. NSIS : `src-tauri/target/release/bundle/nsis/Bootdeck_<version>_x64-setup.exe`.
 
 Le runtime Visual C++ est lié statiquement (réglage par défaut de Tauri) : aucun
 « Visual C++ Redistributable » à installer.
@@ -34,9 +34,9 @@ Le runtime Visual C++ est lié statiquement (réglage par défaut de Tauri) : au
 
 ## Installer
 
-- Double-cliquer sur l'installeur. Installation dans `%LOCALAPPDATA%\Startdeck`, raccourci dans
+- Double-cliquer sur l'installeur. Installation dans `%LOCALAPPDATA%\Bootdeck`, raccourci dans
   le menu Démarrer, entrée dans *Paramètres > Applications* (registre `HKCU`, rien dans `HKLM`).
-- Installation silencieuse (déploiement, tests) : `"Startdeck_<version>_x64-setup.exe" /S`.
+- Installation silencieuse (déploiement, tests) : `"Bootdeck_<version>_x64-setup.exe" /S`.
 - **WebView2** : présent sur Windows 11. Sur un Windows 10 qui ne l'aurait pas, l'installeur télécharge et
   exécute l'installeur officiel de Microsoft (`webviewInstallMode: downloadBootstrapper`). Pour une machine
   sans Internet, passer à `offlineInstaller` (+ ~127 Mo).
@@ -48,10 +48,10 @@ Le runtime Visual C++ est lié statiquement (réglage par défaut de Tauri) : au
 
 | Emplacement | Contenu |
 | ----------- | ------- |
-| `%APPDATA%\dev.startdeck.desktop\` | `presets.json`, `sessions.json` (voir le README) |
-| `%LOCALAPPDATA%\dev.startdeck.desktop\` | Cache et profil de la WebView2 |
+| `%APPDATA%\dev.bootdeck.desktop\` | `presets.json`, `sessions.json` (voir le README) |
+| `%LOCALAPPDATA%\dev.bootdeck.desktop\` | Cache et profil de la WebView2 |
 
-Ces dossiers dépendent de l'**identifiant** de l'application (`dev.startdeck.desktop`), pas du
+Ces dossiers dépendent de l'**identifiant** de l'application (`dev.bootdeck.desktop`), pas du
 dossier d'installation : ils survivent aux mises à jour et aux réinstallations. Ne jamais changer
 l'identifiant d'une version à l'autre, les utilisateurs perdraient leurs presets.
 
@@ -67,7 +67,7 @@ lecture seule ou signalé). Pas de mise à jour automatique dans le MVP.
 
 ## Désinstaller
 
-*Paramètres > Applications > Startdeck > Désinstaller*, ou `uninstall.exe` dans le dossier
+*Paramètres > Applications > Bootdeck > Désinstaller*, ou `uninstall.exe` dans le dossier
 d'installation. Les presets sont **conservés**, sauf si l'utilisateur coche « Delete the application
 data » dans le désinstalleur (jamais en mode silencieux `/S`).
 
@@ -101,13 +101,13 @@ Le code Unix (`src-tauri/src/system/unix.rs`) est partagé avec Linux mais n'a j
 
 Procédure suivie pour la version 0.1.0 (Windows 11, session **sans** droits administrateur), à refaire
 avant chaque diffusion. Ces résultats datent d'avant le changement de nom (même code, ancien nom et
-ancien identifiant) : à refaire avec le premier installeur « Startdeck ». Les données de l'utilisateur sont mises de côté avant, puis restaurées.
+ancien identifiant) : à refaire avec le premier installeur « Bootdeck ». Les données de l'utilisateur sont mises de côté avant, puis restaurées.
 
 | Vérification | Comment | Résultat 0.1.0 |
 | ------------ | ------- | -------------- |
 | Taille | Fichiers produits | Installeur 1,6 Mo, exécutable 4,9 Mo |
 | Installation sans administrateur | `setup.exe /S` depuis une session non élevée ; `RequestExecutionLevel user` dans le script NSIS | OK en ~2 s, rien dans `HKLM` |
-| Fichiers et raccourcis | Dossier d'installation, menu Démarrer, bureau, *Paramètres > Applications* | `%LOCALAPPDATA%\Startdeck` (exe + uninstall.exe), 2 raccourcis, entrée HKCU |
+| Fichiers et raccourcis | Dossier d'installation, menu Démarrer, bureau, *Paramètres > Applications* | `%LOCALAPPDATA%\Bootdeck` (exe + uninstall.exe), 2 raccourcis, entrée HKCU |
 | Dépendances | `dumpbin /DEPENDENTS` sur l'exécutable | DLL de Windows uniquement (CRT universelle), pas de `VCRUNTIME140.dll` |
 | Lancement | Raccourci / exécutable installé | OK, front embarqué (`http://tauri.localhost`) |
 | CSP | Injection d'un `<script>` inline et d'un script distant | Bloqués tous les deux |

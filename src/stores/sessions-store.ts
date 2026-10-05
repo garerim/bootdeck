@@ -76,7 +76,7 @@ export function createSessionsStore(storage: FileStorage) {
         if (parsed.error.kind === "unsupported-version") {
           set({
             mode: "read-only",
-            notice: "Your launch history was written by a newer version of Startdeck. New launches won’t be recorded.",
+            notice: "Your launch history was written by a newer version of Bootdeck. New launches won’t be recorded.",
           });
           return;
         }

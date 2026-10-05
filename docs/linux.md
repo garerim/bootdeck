@@ -1,4 +1,4 @@
-# Startdeck sous Linux
+# Bootdeck sous Linux
 
 État : **aperçu**. Le code compile et tous les tests Rust passent sous Linux (Debian 12, en conteneur).
 L'interface n'a pas encore été essayée sur un vrai bureau Linux : les retours sont les bienvenus.
@@ -44,7 +44,7 @@ npm run dev
 ```
 
 La première compilation prend plusieurs minutes. Les données sont dans
-`~/.local/share/dev.startdeck.desktop/` (`presets.json`, `sessions.json`).
+`~/.local/share/dev.bootdeck.desktop/` (`presets.json`, `sessions.json`).
 
 ## 3. Construire les paquets
 
