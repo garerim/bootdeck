@@ -5,6 +5,7 @@ description = "Launch complete work environments in one click"
 authors = ["Matheo"]
 license = "MIT"
 repository = "https://github.com/garerim/bootdeck"
+homepage = "https://bootdeck.app"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

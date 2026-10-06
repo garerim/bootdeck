@@ -1,0 +1,55 @@
+name: Bug report
+description: Something does not work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. For a security issue, do not use this form: see the security policy.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a preset with a command item `npm run dev`
+        2. Press Launch
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Bootdeck version
+      description: Shown in Settings, or in the name of the installer.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux (preview)
+        - macOS (built from source)
+    validations:
+      required: true
+  - type: input
+    id: os-details
+    attributes:
+      label: OS details
+      description: For Linux, the distribution and desktop (for example Ubuntu 24.04, GNOME, Wayland).
+  - type: textarea
+    id: preset
+    attributes:
+      label: The item or preset involved (optional)
+      description: The relevant part of presets.json helps a lot. Remove any private path or URL before pasting.
+      render: json
