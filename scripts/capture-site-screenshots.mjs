@@ -42,16 +42,12 @@ const sleep = (ms) => new Promise((wait) => setTimeout(wait, ms));
 /** Chaque scène prépare l'écran à capturer. L'ordre compte : le lancement nourrit l'historique. */
 const SCENES = [
   {
-    name: "detail-launch",
+    name: "presets",
     async prepare(page) {
+      // Un lancement d'abord : un preset « running » ici, et une entrée dans l'historique.
       await page.getByRole("button", { name: "Dev SaaS" }).click();
       await page.getByRole("button", { name: "Launch", exact: true }).click();
       await page.getByRole("status").filter({ hasText: "launched in" }).waitFor();
-    },
-  },
-  {
-    name: "presets",
-    async prepare(page) {
       await page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: "Presets" }).click();
       await page.getByText("1 running").waitFor();
     },
