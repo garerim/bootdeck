@@ -1,11 +1,11 @@
-# Bootdeck sous Linux
+# Bootdeck on Linux
 
-État : **aperçu**. Le code compile et tous les tests Rust passent sous Linux (Debian 12, en conteneur).
-L'interface n'a pas encore été essayée sur un vrai bureau Linux : les retours sont les bienvenus.
+Status: **preview**. The code builds and all Rust tests pass on Linux (Debian 12, in a container).
+The interface has not been tried on a real Linux desktop yet: feedback is very welcome.
 
-## 1. Prérequis
+## 1. Requirements
 
-Dépendances système de Tauri 2 (source : [prérequis officiels](https://v2.tauri.app/start/prerequisites/)) :
+Tauri 2 system dependencies (source: [official prerequisites](https://v2.tauri.app/start/prerequisites/)):
 
 **Debian / Ubuntu / Mint / Pop!_OS**
 
@@ -27,64 +27,69 @@ sudo dnf group install "c-development"
 sudo pacman -S --needed webkit2gtk-4.1 base-devel curl wget file openssl appmenu-gtk-module libappindicator-gtk3 librsvg xdotool
 ```
 
-Autres distributions : voir la page officielle.
+Other distributions: see the official page.
 
-Puis **Rust** (stable, via [rustup](https://rustup.rs)) et **Node.js 24** (via [nvm](https://github.com/nvm-sh/nvm)
-ou le gestionnaire de paquets) :
+Then **Rust** (stable, with [rustup](https://rustup.rs)) and **Node.js 24** (with [nvm](https://github.com/nvm-sh/nvm)
+or your package manager):
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-## 2. Lancer l'application
+## 2. Run the app
 
 ```bash
 npm ci
 npm run dev
 ```
 
-La première compilation prend plusieurs minutes. Les données sont dans
+The first build takes several minutes. Your data is stored in
 `~/.local/share/dev.bootdeck.desktop/` (`presets.json`, `sessions.json`).
 
-## 3. Construire les paquets
+## 3. Build the packages
 
 ```bash
 npm run build
 ```
 
-Produit `.deb`, `.rpm` et `.AppImage` dans `src-tauri/target/release/bundle/` (configuration :
+This produces `.deb`, `.rpm` and `.AppImage` files in `src-tauri/target/release/bundle/` (configuration:
 `src-tauri/tauri.linux.conf.json`).
 
-## Différences avec Windows
+## Differences from Windows
 
-| Sujet | Linux |
+| Topic | Linux |
 | ----- | ----- |
-| Commandes | Exécutées par votre shell en mode connexion (`$SHELL -l -c "…"`), qui charge votre profil. |
-| Arrêter une commande | SIGTERM à tout son groupe de processus, puis SIGKILL après 3 s s'il résiste. |
-| Fermeture de l'app | Les commandes en cours sont arrêtées. |
-| **Plantage de l'app** | **Les commandes continuent de tourner** (pas d'équivalent simple aux Job Objects de Windows). |
-| Commande introuvable | Reconnue au code de sortie 127 du shell. |
-| Applications | Nom présent dans le PATH (`code`, `firefox`, `gnome-terminal`…) ou chemin absolu. |
-| URLs et dossiers | Ouverts avec l'application par défaut (`xdg-open`). |
-| Instance unique | Via D-Bus (session de bureau). |
+| Commands | Run by your shell as a login shell (`$SHELL -l -c "…"`), which loads your profile. |
+| Stopping a command | SIGTERM to its whole process group, then SIGKILL after 3 s if it does not stop. |
+| Closing the app | Running commands are stopped. |
+| **App crash** | **Commands keep running** (there is no simple equivalent of Windows Job Objects). |
+| Command not found | Detected from the shell's exit code 127. |
+| Applications | A name on the PATH (`code`, `firefox`, `gnome-terminal`…) or an absolute path. |
+| URLs and folders | Opened with the default application (`xdg-open`). |
+| Single instance | Through D-Bus (desktop session). |
 
-## En cas de problème
+## Troubleshooting
 
-- **Fenêtre blanche ou vide** (certaines cartes graphiques, NVIDIA et Wayland notamment) : relancer avec
+- **White or empty window** (some graphics cards, NVIDIA and Wayland in particular): restart with
   `WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run dev`.
-- **`npm` ou `node` introuvable dans une commande** alors qu'ils fonctionnent dans votre terminal : s'ils
-  sont installés avec nvm, ils ne sont chargés que par `~/.bashrc` (shell interactif). Lancez l'app depuis un
-  terminal (`npm run dev`), ou indiquez le chemin complet de `npm` dans la commande.
-- **Erreur de compilation qui mentionne `webkit2gtk` ou `pkg-config`** : un prérequis manque (étape 1).
+- **`npm` or `node` not found in a command** although they work in your terminal: if they are installed with
+  nvm, only `~/.bashrc` loads them (interactive shell). Start the app from a terminal (`npm run dev`), or use
+  the full path to `npm` in the command.
+- **Build error mentioning `webkit2gtk` or `pkg-config`**: a requirement is missing (step 1).
 
-## À vérifier lors d'un premier essai
+## What to check on a first try
 
-1. L'application démarre ; le thème suit celui du système.
-2. Créer un preset avec une URL, un dossier, une application (`code`, `gnome-text-editor`…) et une commande
-   (`ping -c 3 localhost`, puis une commande longue comme `sleep 300`).
-3. Lancer : la page s'ouvre dans le navigateur, le dossier dans le gestionnaire de fichiers, l'application
-   démarre, la sortie de la commande s'affiche.
-4. Bouton Stop sur la commande longue ; puis relancer et fermer l'app : la commande doit s'arrêter
+1. The app starts, and its theme follows the system theme.
+2. Create a preset with a URL, a folder, an application (`code`, `gnome-text-editor`…) and a command
+   (`ping -c 3 localhost`, then a long one such as `sleep 300`).
+3. Launch: the page opens in the browser, the folder in the file manager, the application starts, and the
+   command output is shown.
+4. Press Stop on the long command. Then launch again and close the app: the command must stop
    (`ps aux | grep sleep`).
-5. Variables (`{port}`), boutons « Parcourir… », raccourcis clavier (`Ctrl+N`, `Ctrl+S`, `Échap`).
-6. Relancer l'app : presets et historique (Recent) sont conservés ; une 2ᵉ instance ramène la fenêtre existante.
+5. Variables (`{port}`), the folder and program pickers (the folder icon next to the fields), and keyboard shortcuts (<kbd>Ctrl</kbd>+<kbd>N</kbd>,
+   <kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Esc</kbd>).
+6. Restart the app: presets and history (Recent) are kept. Starting a second instance brings the existing
+   window to the front.
+
+If something does not work, please [open an issue](https://github.com/garerim/bootdeck/issues/new/choose)
+with your distribution, desktop and display server (X11 or Wayland).
